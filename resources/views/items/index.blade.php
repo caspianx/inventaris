@@ -26,20 +26,26 @@
             </select>
             <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
         </form>
-        <a href="{{ route('items.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Tambah Barang</a>
+        @if(auth()->user()->canAccess('items.create'))
+            <a href="{{ route('items.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Tambah Barang</a>
+        @endif
     </div>
     <form id="print-barcode-form" method="GET" action="{{ route('items.print-barcode') }}" target="_blank"></form>
     <div class="card-body p-0">
         <div class="px-3 pt-3">
-            <button type="submit" form="print-barcode-form" id="print-selected-btn" class="btn btn-outline-primary btn-sm" disabled>
-                <i class="bi bi-printer"></i> Cetak Barcode Terpilih
-            </button>
-            <span id="selected-count-label" class="text-muted small ms-2"></span>
+            @if(auth()->user()->canAccess('items.print_barcode'))
+                <button type="submit" form="print-barcode-form" id="print-selected-btn" class="btn btn-outline-primary btn-sm" disabled>
+                    <i class="bi bi-printer"></i> Cetak Barcode Terpilih
+                </button>
+                <span id="selected-count-label" class="text-muted small ms-2"></span>
+            @endif
         </div>
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th><input type="checkbox" id="select-all-items"></th>
+                    @if(auth()->user()->canAccess('items.print_barcode'))
+                        <th><input type="checkbox" id="select-all-items"></th>
+                    @endif
                     <th>SKU</th><th>Barcode</th><th>Nama</th><th>Kategori</th><th>Satuan</th>
                     <th class="text-end">Harga Beli</th><th class="text-end">Harga Jual</th>
                     <th class="text-end">Stok</th><th></th>
@@ -48,13 +54,15 @@
             <tbody>
                 @forelse($items as $item)
                     <tr class="{{ $item->isLowStock() ? 'table-danger' : '' }}">
-                        <td>
-                            <div class="d-flex align-items-center gap-1">
-                                <input type="checkbox" class="item-checkbox" name="ids[]" value="{{ $item->id }}" form="print-barcode-form">
-                                <input type="number" min="1" max="100" value="1" name="qty[{{ $item->id }}]" form="print-barcode-form"
-                                       class="form-control form-control-sm qty-input" style="width: 55px;" title="Jumlah label" disabled>
-                            </div>
-                        </td>
+                        @if(auth()->user()->canAccess('items.print_barcode'))
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <input type="checkbox" class="item-checkbox" name="ids[]" value="{{ $item->id }}" form="print-barcode-form">
+                                    <input type="number" min="1" max="100" value="1" name="qty[{{ $item->id }}]" form="print-barcode-form"
+                                           class="form-control form-control-sm qty-input" style="width: 55px;" title="Jumlah label" disabled>
+                                </div>
+                            </td>
+                        @endif
                         <td>{{ $item->sku }}</td>
                         <td>
                             @if($item->barcode_path)
@@ -70,9 +78,13 @@
                         <td class="text-end">Rp {{ number_format($item->selling_price, 0, ',', '.') }}</td>
                         <td class="text-end fw-bold">{{ $item->current_stock }}</td>
                         <td class="text-end">
-                            <a href="{{ route('items.print-barcode', ['ids' => [$item->id]]) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Cetak Barcode"><i class="bi bi-printer"></i></a>
-                            @if(auth()->user()->role !== 'staff')
+                            @if(auth()->user()->canAccess('items.print_barcode'))
+                                <a href="{{ route('items.print-barcode', ['ids' => [$item->id]]) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Cetak Barcode"><i class="bi bi-printer"></i></a>
+                            @endif
+                            @if(auth()->user()->canAccess('items.edit'))
                                 <a href="{{ route('items.edit', $item) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                            @endif
+                            @if(auth()->user()->canAccess('items.delete'))
                                 <form action="{{ route('items.destroy', $item) }}" method="POST" class="d-inline" data-confirm="Hapus barang ini?">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
@@ -81,7 +93,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="10" class="text-center text-muted py-4">Belum ada data barang</td></tr>
+                    <tr><td colspan="{{ auth()->user()->canAccess('items.print_barcode') ? 10 : 9 }}" class="text-center text-muted py-4">Belum ada data barang</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -98,6 +110,7 @@
     </div>
 </div>
 
+@if(auth()->user()->canAccess('items.print_barcode'))
 <script>
 const selectAllCheckbox = document.getElementById('select-all-items');
 const itemCheckboxes = document.querySelectorAll('.item-checkbox');
@@ -128,6 +141,7 @@ selectAllCheckbox.addEventListener('change', function () {
     updatePrintButtonState();
 });
 </script>
+@endif
 
 <script>
 const itemSearchForm = document.getElementById('item-search-form');

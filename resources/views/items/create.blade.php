@@ -26,8 +26,8 @@
                                 <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                             @endforeach
                         </select>
-                        @if(auth()->user()->role !== 'staff')
-                            <button type="button" class="btn btn-outline-primary flex-shrink-0" data-bs-toggle="modal" data-bs-target="#newCategoryModal" title="Tambah kategori baru">
+                        @if(auth()->user()->canAccess('categories.manage'))
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newCategoryModal" title="Tambah kategori baru">
                                 <i class="bi bi-plus-lg"></i>
                             </button>
                         @endif
@@ -87,8 +87,17 @@ nameInput.addEventListener('input', function () {
             .then(res => res.json())
             .then(data => {
                 if (data.exists) {
-                    warningBox.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Barang "<strong>${data.item.name}</strong>" (SKU: ${data.item.sku}) sudah terdaftar dengan stok saat ini <strong>${data.item.current_stock}</strong>. `
-                        + `<a href="${data.item.edit_url}" class="alert-link">Buka data ini</a> atau gunakan menu <a href="{{ route('stock-movements.create') }}" class="alert-link">Stok Masuk</a> untuk menambah stoknya, bukan membuat barang baru.`;
+                    let actionText = 'Gunakan data barang yang sudah ada, bukan membuat barang baru.';
+
+                    if (data.item.edit_url && data.item.stock_url) {
+                        actionText = `<a href="${data.item.edit_url}" class="alert-link">Buka data ini</a> atau gunakan menu <a href="${data.item.stock_url}" class="alert-link">Stok Masuk</a> untuk menambah stoknya.`;
+                    } else if (data.item.edit_url) {
+                        actionText = `<a href="${data.item.edit_url}" class="alert-link">Buka data ini</a>.`;
+                    } else if (data.item.stock_url) {
+                        actionText = `Gunakan menu <a href="${data.item.stock_url}" class="alert-link">Stok Masuk</a> untuk menambah stoknya.`;
+                    }
+
+                    warningBox.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Barang "<strong>${data.item.name}</strong>" (SKU: ${data.item.sku}) sudah terdaftar dengan stok saat ini <strong>${data.item.current_stock}</strong>. ${actionText}`;
                     warningBox.classList.remove('d-none');
                 } else {
                     warningBox.classList.add('d-none');
@@ -97,7 +106,7 @@ nameInput.addEventListener('input', function () {
     }, 400); // debounce biar tidak spam request tiap ketikan
 });
 </script>
-@if(auth()->user()->role !== 'staff')
+@if(auth()->user()->canAccess('categories.manage'))
 <div class="modal fade" id="newCategoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -129,7 +138,7 @@ nameInput.addEventListener('input', function () {
 
 <script>
 // Fitur 1: Tambah kategori baru langsung dari form Tambah Barang (via modal, tanpa reload halaman)
-@if(auth()->user()->role !== 'staff')
+@if(auth()->user()->canAccess('categories.manage'))
 const newCategoryForm = document.getElementById('new-category-form');
 const newCategoryModalEl = document.getElementById('newCategoryModal');
 const newCategoryModal = new bootstrap.Modal(newCategoryModalEl);

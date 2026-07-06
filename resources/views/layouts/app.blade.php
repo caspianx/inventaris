@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Dashboard') - Inventory App</title>
+    <title>@yield('title', 'Dashboard') - {{ $storeSetting->name ?? 'Inventory App' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -12,25 +12,54 @@
         .sidebar { min-height: 100vh; background: #1e2a3a; }
         .sidebar a { color: #c9d3de; text-decoration: none; display: block; padding: .6rem 1rem; border-radius: 6px; }
         .sidebar a:hover, .sidebar a.active { background: #33445c; color: #fff; }
-        .sidebar .brand { color: #fff; font-weight: 600; padding: 1rem; }
+        .sidebar .brand { color: #fff; font-weight: 600; padding: 1rem; display: flex; align-items: center; gap: .55rem; }
+        .sidebar .brand img { width: 30px; height: 30px; object-fit: contain; border-radius: 4px; background: #fff; padding: 2px; }
         .card-stat { border: none; border-radius: 10px; }
     </style>
 </head>
 <body>
 <div class="d-flex">
     <nav class="sidebar p-2" style="width: 240px;">
-        <div class="brand"><i class="bi bi-box-seam"></i> Inventory App</div>
-        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
-        <a href="{{ route('items.index') }}" class="{{ request()->routeIs('items.*') ? 'active' : '' }}"><i class="bi bi-box"></i> Master Barang</a>
-        <a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> Kasir</a>
-        <a href="{{ route('stock-movements.index') }}" class="{{ request()->routeIs('stock-movements.*') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i> Stok Masuk/Keluar</a>
-        @if(auth()->user()->role !== 'staff')
+        <div class="brand">
+            @if(!empty($storeSetting->logo_path))
+                <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo {{ $storeSetting->name }}">
+            @else
+                <i class="bi bi-box-seam"></i>
+            @endif
+            <span>{{ $storeSetting->name ?? 'Inventory App' }}</span>
+        </div>
+        @if(auth()->user()->canAccess('dashboard.view'))
+            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        @endif
+        @if(auth()->user()->canAccess('items.view'))
+            <a href="{{ route('items.index') }}" class="{{ request()->routeIs('items.*') ? 'active' : '' }}"><i class="bi bi-box"></i> Master Barang</a>
+        @endif
+        @if(auth()->user()->canAccess('sales.view') || auth()->user()->canAccess('sales.create'))
+            <a href="{{ auth()->user()->canAccess('sales.view') ? route('sales.index') : route('sales.create') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> Kasir</a>
+        @endif
+        @if(auth()->user()->canAccess('stock_movements.view'))
+            <a href="{{ route('stock-movements.index') }}" class="{{ request()->routeIs('stock-movements.*') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i> Stok Masuk/Keluar</a>
+        @endif
+        @if(auth()->user()->canAccess('categories.manage'))
             <a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}"><i class="bi bi-tags"></i> Kategori</a>
+        @endif
+        @if(auth()->user()->canAccess('suppliers.manage'))
             <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><i class="bi bi-truck"></i> Supplier</a>
+        @endif
+        @if(auth()->user()->canAccess('store_settings.manage'))
+            <a href="{{ route('store-settings.edit') }}" class="{{ request()->routeIs('store-settings.*') ? 'active' : '' }}"><i class="bi bi-shop"></i> Pengaturan Toko</a>
+        @endif
+        @if(auth()->user()->canAccess('purchase_orders.view'))
             <a href="{{ route('purchase-orders.index') }}" class="{{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}"><i class="bi bi-clipboard-check"></i> Purchase Order</a>
         @endif
-        @if(auth()->user()->role === 'admin')
+        @if(auth()->user()->canAccess('users.manage'))
             <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}"><i class="bi bi-people"></i> Manajemen User</a>
+        @endif
+        @if(auth()->user()->canAccess('role_permissions.manage'))
+            <a href="{{ route('role-permissions.edit') }}" class="{{ request()->routeIs('role-permissions.*') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Akses Role</a>
+        @endif
+        @if(auth()->user()->canAccess('activity_logs.view'))
+            <a href="{{ route('activity-logs.index') }}" class="{{ request()->routeIs('activity-logs.*') ? 'active' : '' }}"><i class="bi bi-journal-text"></i> Riwayat Audit</a>
         @endif
         <hr class="text-secondary">
         <form action="{{ route('logout') }}" method="POST">
@@ -70,7 +99,7 @@
         @yield('content')
 
         <footer class="text-center text-muted small mt-5 pt-3 border-top">
-            &copy; {{ date('Y') }} Inventory App. Seluruh hak cipta dilindungi.
+            &copy; {{ date('Y') }} {{ $storeSetting->name ?? 'Inventory App' }}. Seluruh hak cipta dilindungi.
         </footer>
     </main>
 </div>

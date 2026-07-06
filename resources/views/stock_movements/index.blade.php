@@ -18,7 +18,9 @@
                 @endforeach
             </select>
         </form>
-        <a href="{{ route('stock-movements.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Catat Mutasi</a>
+        @if(auth()->user()->canAccess('stock_movements.create'))
+            <a href="{{ route('stock-movements.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Catat Mutasi</a>
+        @endif
     </div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0">

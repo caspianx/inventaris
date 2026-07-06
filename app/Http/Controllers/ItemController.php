@@ -160,7 +160,10 @@ class ItemController extends Controller
                 'sku' => $match->sku,
                 'name' => $match->name,
                 'current_stock' => $match->current_stock,
-                'edit_url' => route('items.edit', $match),
+                'edit_url' => $request->user()?->canAccess('items.edit') ? route('items.edit', $match) : null,
+                'stock_url' => $request->user()?->canAccess('stock_movements.create')
+                    ? route('stock-movements.create', ['item_id' => $match->id, 'type' => 'in'])
+                    : null,
             ] : null,
         ]);
     }

@@ -13,7 +13,9 @@ class EnsureRole
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!$request->user() || !in_array($request->user()->role, $roles)) {
+        $user = $request->user();
+
+        if (!$user || !in_array($user->getRoleName(), $roles, true)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 

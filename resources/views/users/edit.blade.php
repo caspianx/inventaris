@@ -17,9 +17,9 @@
             <div class="mb-3">
                 <label class="form-label">Role</label>
                 <select name="role" class="form-select" required {{ $user->id === auth()->id() ? 'disabled' : '' }}>
-                    <option value="staff" {{ old('role', $user->role) == 'staff' ? 'selected' : '' }}>Staff</option>
-                    <option value="manager" {{ old('role', $user->role) == 'manager' ? 'selected' : '' }}>Manager</option>
-                    <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                    @foreach($roles as $r)
+                        <option value="{{ $r->name }}" {{ old('role', $user->role) == $r->name ? 'selected' : '' }}>{{ $r->label ?? ucfirst($r->name) }}</option>
+                    @endforeach
                 </select>
                 @if($user->id === auth()->id())
                     <div class="form-text text-warning">Anda tidak bisa mengubah role akun sendiri.</div>

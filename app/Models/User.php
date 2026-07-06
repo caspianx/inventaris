@@ -6,16 +6,19 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
+use App\Traits\RecordsActivity;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, RecordsActivity;
 
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
+        'role_id',
     ];
 
     protected $hidden = [
@@ -33,17 +36,44 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->getRoleName() === 'admin';
     }
 
     public function isManager(): bool
     {
-        return $this->role === 'manager';
+        return $this->getRoleName() === 'manager';
     }
 
     public function isStaff(): bool
     {
-        return $this->role === 'staff';
+        return $this->getRoleName() === 'staff';
+    }
+
+    public function canAccess(string $permission): bool
+    {
+        $roleName = $this->getRoleName();
+
+        if ($roleName === 'admin') {
+            return true;
+        }
+
+        $permissions = Cache::remember(
+            "role_permissions.{$roleName}",
+            now()->addMinutes(10),
+            fn () => \App\Models\RolePermission::where('role', $roleName)->pluck('permission')->all()
+        );
+
+        return in_array($permission, $permissions, true);
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function getRoleName(): ?string
+    {
+        return $this->role?->name ?? $this->role;
     }
 
     public function purchaseOrders()

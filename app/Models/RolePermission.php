@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\RecordsActivity;
 
-class Category extends Model
+class RolePermission extends Model
 {
     use HasFactory, RecordsActivity;
 
-    protected $fillable = ['name', 'description'];
-
-    public function items()
-    {
-        return $this->hasMany(Item::class);
-    }
+    protected $fillable = [
+        'role',
+        'permission',
+    ];
 }

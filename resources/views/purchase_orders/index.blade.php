@@ -13,7 +13,9 @@
                 <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
         </form>
-        <a href="{{ route('purchase-orders.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Buat PO</a>
+        @if(auth()->user()->canAccess('purchase_orders.create'))
+            <a href="{{ route('purchase-orders.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Buat PO</a>
+        @endif
     </div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -33,7 +35,7 @@
                         <td class="text-end">Rp {{ number_format($po->total_amount, 0, ',', '.') }}</td>
                         <td class="text-end">
                             <a href="{{ route('purchase-orders.show', $po) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> Detail</a>
-                            @if(auth()->user()->role === 'manager' && $po->status !== 'received')
+                            @if(auth()->user()->canAccess('purchase_orders.delete') && $po->status !== 'received')
                                 <form action="{{ route('purchase-orders.destroy', $po) }}" method="POST" class="d-inline" data-confirm="Hapus PO {{ $po->po_number }}? Tindakan ini tidak bisa dibatalkan.">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>

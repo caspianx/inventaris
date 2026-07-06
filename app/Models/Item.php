@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\RecordsActivity;
 
 class Item extends Model
 {
-    use HasFactory;
+    use HasFactory, RecordsActivity;
 
     protected $fillable = [
         'sku',
@@ -22,13 +23,12 @@ class Item extends Model
         'description',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'purchase_price' => 'decimal:2',
-            'selling_price' => 'decimal:2',
-        ];
-    }
+    protected $casts = [
+        'purchase_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+        'min_stock' => 'integer',
+        'current_stock' => 'integer',
+    ];
 
     public function category()
     {

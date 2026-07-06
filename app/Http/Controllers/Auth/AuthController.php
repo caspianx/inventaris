@@ -22,7 +22,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended($this->firstAccessibleUrl($request));
         }
 
         return back()->withErrors([
@@ -37,5 +37,32 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    private function firstAccessibleUrl(Request $request): string
+    {
+        $user = $request->user();
+
+        $routes = [
+            'dashboard.view' => 'dashboard',
+            'items.view' => 'items.index',
+            'sales.view' => 'sales.index',
+            'sales.create' => 'sales.create',
+            'stock_movements.view' => 'stock-movements.index',
+            'categories.manage' => 'categories.index',
+            'suppliers.manage' => 'suppliers.index',
+            'purchase_orders.view' => 'purchase-orders.index',
+            'store_settings.manage' => 'store-settings.edit',
+            'users.manage' => 'users.index',
+            'role_permissions.manage' => 'role-permissions.edit',
+        ];
+
+        foreach ($routes as $permission => $route) {
+            if ($user->canAccess($permission)) {
+                return route($route);
+            }
+        }
+
+        return route('no-access');
     }
 }

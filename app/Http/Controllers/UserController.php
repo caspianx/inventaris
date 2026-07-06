@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Models\Role;
 
 class UserController extends Controller
 {
@@ -47,23 +48,29 @@ class UserController extends Controller
 
     public function create()
     {
-        return view('users.create');
+        $roles = Role::orderBy('name')->get();
+        return view('users.create', compact('roles'));
     }
 
     public function store(Request $request)
     {
+        $roleNames = Role::pluck('name')->all();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
-            'role' => ['required', 'in:admin,manager,staff'],
+            'role' => ['required', 'in:' . implode(',', $roleNames)],
         ]);
+
+        $role = Role::where('name', $validated['role'])->first();
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'role_id' => $role?->id,
         ]);
 
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
@@ -71,15 +78,18 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        $roles = Role::orderBy('name')->get();
+        return view('users.edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, User $user)
     {
+        $roleNames = Role::pluck('name')->all();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role' => ['required', 'in:admin,manager,staff'],
+            'role' => ['required', 'in:' . implode(',', $roleNames)],
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ]);
 
@@ -92,6 +102,7 @@ class UserController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
+        $user->role_id = Role::where('name', $validated['role'])->value('id');
 
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);

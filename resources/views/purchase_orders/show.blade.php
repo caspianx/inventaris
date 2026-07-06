@@ -37,7 +37,7 @@
             <p><strong>Catatan:</strong> {{ $purchaseOrder->notes }}</p>
         @endif
 
-        @if($purchaseOrder->status !== 'received' && $purchaseOrder->status !== 'cancelled')
+        @if(auth()->user()->canAccess('purchase_orders.update_status') && $purchaseOrder->status !== 'received' && $purchaseOrder->status !== 'cancelled')
             <div class="d-flex gap-2 mt-3">
                 @if($purchaseOrder->status === 'draft')
                     <form action="{{ route('purchase-orders.status', $purchaseOrder) }}" method="POST">
@@ -61,7 +61,7 @@
 
         <div class="d-flex justify-content-between align-items-center mt-3">
             <a href="{{ route('purchase-orders.index') }}" class="btn btn-link">&larr; Kembali</a>
-            @if(auth()->user()->role === 'manager' && $purchaseOrder->status !== 'received')
+            @if(auth()->user()->canAccess('purchase_orders.delete') && $purchaseOrder->status !== 'received')
                 <form action="{{ route('purchase-orders.destroy', $purchaseOrder) }}" method="POST" data-confirm="Hapus PO {{ $purchaseOrder->po_number }}? Tindakan ini tidak bisa dibatalkan.">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Hapus PO</button>

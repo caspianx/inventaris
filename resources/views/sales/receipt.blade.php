@@ -7,7 +7,7 @@
         body {
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            width: 300px; /* kira-kira lebar kertas thermal 80mm */
+            width: 300px;
             margin: 0 auto;
             padding: 12px;
             color: #000;
@@ -18,10 +18,20 @@
         td { padding: 2px 0; vertical-align: top; }
         .right { text-align: right; }
         .item-name { font-weight: bold; }
+        .store-logo { max-width: 90px; max-height: 70px; object-fit: contain; margin-bottom: 4px; }
         .toolbar { text-align: center; margin-bottom: 16px; }
         .toolbar button, .toolbar a {
-            display: inline-block; padding: 8px 16px; margin: 4px; text-decoration: none;
-            border-radius: 6px; border: 1px solid #333; background: #fff; color: #333; font-family: Arial, sans-serif; font-size: 13px; cursor: pointer;
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 4px;
+            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #fff;
+            color: #333;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            cursor: pointer;
         }
         @media print {
             .no-print { display: none !important; }
@@ -32,14 +42,23 @@
 <body>
 
     <div class="toolbar no-print">
-        <button onclick="window.print()">🖨️ Cetak Struk</button>
-        <a href="{{ route('sales.create') }}">Transaksi Baru</a>
-        <a href="{{ route('sales.index') }}">Riwayat Transaksi</a>
+        <button onclick="window.print()">Cetak Struk</button>
+        @if(auth()->user()->canAccess('sales.create'))
+            <a href="{{ route('sales.create') }}">Transaksi Baru</a>
+        @endif
+        @if(auth()->user()->canAccess('sales.view'))
+            <a href="{{ route('sales.index') }}">Riwayat Transaksi</a>
+        @endif
     </div>
 
     <div class="center">
-        <strong>INVENTORY APP</strong><br>
-        Jl. Contoh Alamat No. 123<br>
+        @if(!empty($storeSetting->logo_path))
+            <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo {{ $storeSetting->name }}" class="store-logo"><br>
+        @endif
+        <strong>{{ strtoupper($storeSetting->name ?? 'Inventory App') }}</strong><br>
+        @if(!empty($storeSetting->address))
+            {!! nl2br(e($storeSetting->address)) !!}<br>
+        @endif
         ------------------------
     </div>
     <div class="line"></div>

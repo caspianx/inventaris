@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
         'role' => \App\Http\Middleware\EnsureRole::class,
+        'permission' => \App\Http\Middleware\EnsurePermission::class,
     ]);
         $middleware->web(append: [
             \App\Http\Middleware\PreventBackHistoryCache::class,
@@ -24,4 +25,3 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
     })->create();
-

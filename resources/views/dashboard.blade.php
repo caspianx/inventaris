@@ -52,9 +52,13 @@
                                 <td class="text-end text-danger fw-bold">{{ $item->current_stock }}</td>
                                 <td class="text-end">{{ $item->min_stock }}</td>
                                 <td class="text-end">
-                                    <a href="{{ route('stock-movements.create', ['item_id' => $item->id, 'type' => 'in']) }}" class="btn btn-sm btn-success">
-                                        <i class="bi bi-plus-circle"></i> Restock
-                                    </a>
+                                    @if(auth()->user()->canAccess('stock_movements.create'))
+                                        <a href="{{ route('stock-movements.create', ['item_id' => $item->id, 'type' => 'in']) }}" class="btn btn-sm btn-success">
+                                            <i class="bi bi-plus-circle"></i> Restock
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

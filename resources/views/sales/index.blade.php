@@ -19,9 +19,11 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 d-flex align-items-center justify-content-end">
-        <a href="{{ route('sales.create') }}" class="btn btn-primary btn-lg"><i class="bi bi-cash-coin"></i> Transaksi Baru</a>
-    </div>
+    @if(auth()->user()->canAccess('sales.create'))
+        <div class="col-md-4 d-flex align-items-center justify-content-end">
+            <a href="{{ route('sales.create') }}" class="btn btn-primary btn-lg"><i class="bi bi-cash-coin"></i> Transaksi Baru</a>
+        </div>
+    @endif
 </div>
 
 <div class="card shadow-sm">
