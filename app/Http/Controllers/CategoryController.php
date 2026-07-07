@@ -35,7 +35,7 @@ class CategoryController extends Controller
         return response()->json($categories->map(fn ($category) => [
             'value' => $category->name,
             'title' => $category->name,
-            'subtitle' => $category->items_count . ' barang',
+            'subtitle' => $category->items_count.' barang',
         ]));
     }
 

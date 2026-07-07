@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Category;
@@ -16,7 +18,7 @@ class ItemController extends Controller
     {
         $lastNumber = Item::where('sku', 'like', 'BRG-%')
             ->pluck('sku')
-            ->map(function ($sku) {
+            ->map(function (string $sku): int {
                 preg_match('/^BRG-(\d+)$/', $sku, $matches);
 
                 return isset($matches[1]) ? (int) $matches[1] : 0;
@@ -26,7 +28,7 @@ class ItemController extends Controller
         $nextNumber = $lastNumber + 1;
 
         do {
-            $sku = 'BRG-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            $sku = 'BRG-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
             $nextNumber++;
         } while (Item::where('sku', $sku)->exists());
 
@@ -44,21 +46,31 @@ class ItemController extends Controller
         try {
             $directory = public_path('barcodes');
 
-            if (!File::exists($directory)) {
+            if (! File::exists($directory)) {
                 File::makeDirectory($directory, 0755, true);
             }
 
-            $filename = $item->sku . '.svg';
-            $path = 'barcodes/' . $filename;
+            // Prevent path traversal: gunakan basename untuk sanitize filename
+            $filename = basename($item->sku).'.svg';
+            $path = 'barcodes/'.$filename;
+            $fullPath = public_path($path);
+
+            // Validate path is within barcodes directory
+            $realPath = realpath(dirname($fullPath)) ?: dirname($fullPath);
+            $barcodeDir = realpath($directory) ?: $directory;
+            if (strpos($realPath, $barcodeDir) !== 0) {
+                throw new \InvalidArgumentException('Invalid barcode path');
+            }
+
             $svg = app(Code128BarcodeGenerator::class)->svg($item->sku);
 
-            File::put(public_path($path), $svg);
+            File::put($fullPath, $svg);
 
             $item->forceFill(['barcode_path' => $path])->save();
 
             return null;
         } catch (\Throwable $e) {
-            Log::error('Gagal membuat barcode untuk item #' . $item->id . ' (SKU: ' . $item->sku . '): ' . $e->getMessage());
+            Log::error('Gagal membuat barcode untuk item #'.$item->id.' (SKU: '.$item->sku.'): '.$e->getMessage());
 
             return 'Barang berhasil disimpan, tetapi barcode gagal dibuat. Silakan hubungi admin (cek storage/logs/laravel.log untuk detail teknis).';
         }
@@ -82,7 +94,7 @@ class ItemController extends Controller
 
         // Pastikan setiap barang punya file barcode sebelum dicetak (generate kalau belum ada/hilang)
         foreach ($items as $item) {
-            if (!$item->barcode_path || !File::exists(public_path($item->barcode_path))) {
+            if (! $item->barcode_path || ! File::exists(public_path($item->barcode_path))) {
                 $this->generateBarcode($item);
             }
         }
@@ -108,7 +120,7 @@ class ItemController extends Controller
         $allowedPerPage = [5, 10, 50, 100];
         $perPage = (int) $request->input('per_page', 10);
 
-        if (!in_array($perPage, $allowedPerPage, true)) {
+        if (! in_array($perPage, $allowedPerPage, true)) {
             $perPage = 10;
         }
 
@@ -201,9 +213,9 @@ class ItemController extends Controller
         }
 
         $items = Item::where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            })
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%");
+        })
             ->latest()
             ->limit(10)
             ->get(['id', 'sku', 'name', 'current_stock']);
@@ -257,6 +269,7 @@ class ItemController extends Controller
     public function edit(Item $item)
     {
         $categories = Category::orderBy('name')->get();
+
         return view('items.edit', compact('item', 'categories'));
     }
 
@@ -287,7 +300,7 @@ class ItemController extends Controller
 
         $barcodeError = null;
 
-        if ($item->sku !== $oldSku || !$item->barcode_path || !File::exists(public_path($item->barcode_path))) {
+        if ($item->sku !== $oldSku || ! $item->barcode_path || ! File::exists(public_path($item->barcode_path))) {
             $barcodeError = $this->generateBarcode($item);
         }
 

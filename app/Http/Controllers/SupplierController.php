@@ -10,10 +10,10 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         $suppliers = Supplier::when($request->search, fn ($q) => $q->where(function ($query) use ($request) {
-                $query->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('contact_person', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%");
-            }))
+            $query->where('name', 'like', "%{$request->search}%")
+                ->orWhere('contact_person', 'like', "%{$request->search}%")
+                ->orWhere('email', 'like', "%{$request->search}%");
+        }))
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
@@ -30,10 +30,10 @@ class SupplierController extends Controller
         }
 
         $suppliers = Supplier::where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('contact_person', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            })
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('contact_person', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+        })
             ->orderBy('name')
             ->limit(10)
             ->get(['name', 'contact_person', 'email']);
@@ -41,7 +41,7 @@ class SupplierController extends Controller
         return response()->json($suppliers->map(fn ($supplier) => [
             'value' => $supplier->name,
             'title' => $supplier->name,
-            'subtitle' => trim(($supplier->contact_person ?: '-') . ' - ' . ($supplier->email ?: '-')),
+            'subtitle' => trim(($supplier->contact_person ?: '-').' - '.($supplier->email ?: '-')),
         ]));
     }
 

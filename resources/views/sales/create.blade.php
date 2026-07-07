@@ -44,6 +44,7 @@
 
                 <form method="POST" action="{{ route('sales.store') }}" id="pos-form">
                     @csrf
+                    <input type="hidden" name="print_receipt" value="1">
                     <div id="cart-hidden-inputs"></div>
 
                     <div class="d-flex justify-content-between mb-2">
@@ -95,6 +96,31 @@
         </div>
     </div>
 </div>
+
+@if(session('pos_success') || session('pos_error'))
+    <div class="modal fade" id="posStatusModal" tabindex="-1" aria-labelledby="posStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="posStatusModalLabel">{{ session('pos_error') ? 'Cetak Struk Gagal' : 'Transaksi Berhasil' }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ session('pos_message') }}</p>
+                    <p class="mb-0"><strong>ID Transaksi:</strong> {{ session('pos_sale_id') }}</p>
+                    @if(session('pos_error'))
+                        <div class="alert alert-danger mt-3" role="alert">
+                            {{ session('pos_error') }}
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Lanjutkan Transaksi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
 
 <script>
 let cart = [];
@@ -324,4 +350,16 @@ document.getElementById('pos-form').addEventListener('submit', function (e) {
 
 calculateTotals();
 </script>
+
+@if(session('pos_success') || session('pos_error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusModalEl = document.getElementById('posStatusModal');
+            if (statusModalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+                const statusModal = new bootstrap.Modal(statusModalEl);
+                statusModal.show();
+            }
+        });
+    </script>
+@endif
 @endsection

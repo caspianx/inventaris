@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use App\Models\Role;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
         $users = User::when($request->search, fn ($q) => $q->where(function ($query) use ($request) {
-                $query->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%");
-            }))
+            $query->where('name', 'like', "%{$request->search}%")
+                ->orWhere('email', 'like', "%{$request->search}%");
+        }))
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
@@ -32,9 +32,9 @@ class UserController extends Controller
         }
 
         $users = User::where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            })
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+        })
             ->orderBy('name')
             ->limit(10)
             ->get(['name', 'email', 'role']);
@@ -42,13 +42,14 @@ class UserController extends Controller
         return response()->json($users->map(fn ($user) => [
             'value' => $user->name,
             'title' => $user->name,
-            'subtitle' => $user->email . ' - ' . strtoupper($user->role),
+            'subtitle' => $user->email.' - '.strtoupper($user->role),
         ]));
     }
 
     public function create()
     {
         $roles = Role::orderBy('name')->get();
+
         return view('users.create', compact('roles'));
     }
 
@@ -60,7 +61,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
-            'role' => ['required', 'in:' . implode(',', $roleNames)],
+            'role' => ['required', 'in:'.implode(',', $roleNames)],
         ]);
 
         $role = Role::where('name', $validated['role'])->first();
@@ -79,6 +80,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::orderBy('name')->get();
+
         return view('users.edit', compact('user', 'roles'));
     }
 
@@ -88,8 +90,8 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role' => ['required', 'in:' . implode(',', $roleNames)],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'role' => ['required', 'in:'.implode(',', $roleNames)],
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ]);
 
@@ -104,7 +106,7 @@ class UserController extends Controller
         $user->role = $validated['role'];
         $user->role_id = Role::where('name', $validated['role'])->value('id');
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 

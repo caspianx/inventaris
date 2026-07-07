@@ -46,8 +46,12 @@
         @if(auth()->user()->canAccess('suppliers.manage'))
             <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><i class="bi bi-truck"></i> Supplier</a>
         @endif
+        @if(auth()->user()->canAccess('reports.view'))
+            <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-spreadsheet"></i> Laporan</a>
+        @endif
         @if(auth()->user()->canAccess('store_settings.manage'))
             <a href="{{ route('store-settings.edit') }}" class="{{ request()->routeIs('store-settings.*') ? 'active' : '' }}"><i class="bi bi-shop"></i> Pengaturan Toko</a>
+            <a href="{{ route('print-files.index') }}" class="{{ request()->routeIs('print-files.*') ? 'active' : '' }}"><i class="bi bi-printer"></i> Cetak Struk</a>
         @endif
         @if(auth()->user()->canAccess('purchase_orders.view'))
             <a href="{{ route('purchase-orders.index') }}" class="{{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}"><i class="bi bi-clipboard-check"></i> Purchase Order</a>

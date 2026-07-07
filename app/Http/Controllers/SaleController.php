@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Jobs\PrintReceipt;
 use App\Models\Item;
 use App\Models\Sale;
 use App\Models\StockMovement;
+use App\Models\StoreSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SaleController extends Controller
 {
@@ -15,7 +20,7 @@ class SaleController extends Controller
      */
     public function index(Request $request)
     {
-        $sales = Sale::with('user')
+        $sales = Sale::with(['user', 'items'])
             ->when($request->date, fn ($q) => $q->whereDate('created_at', $request->date))
             ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
             ->latest()
@@ -86,7 +91,7 @@ class SaleController extends Controller
                 }
 
                 $sale = Sale::create([
-                    'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad((Sale::count() + 1), 4, '0', STR_PAD_LEFT),
+                    'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad((Sale::count() + 1), 4, '0', STR_PAD_LEFT),
                     'user_id' => $request->user()->id,
                     'subtotal' => $subtotal,
                     'discount' => $discount,
@@ -115,7 +120,7 @@ class SaleController extends Controller
                         'quantity' => $line['quantity'],
                         'reference_type' => 'sale',
                         'reference_id' => $sale->id,
-                        'notes' => 'Penjualan ' . $sale->invoice_number,
+                        'notes' => 'Penjualan '.$sale->invoice_number,
                         'user_id' => $request->user()->id,
                     ]);
                 }
@@ -126,7 +131,29 @@ class SaleController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('sales.show', $sale)->with('success', 'Transaksi berhasil disimpan.');
+        $printMessage = 'Transaksi berhasil disimpan dan struk telah diproses.';
+        $printError = null;
+
+        try {
+            $store = StoreSetting::current();
+            if ($store->auto_print_receipt || $request->boolean('print_receipt')) {
+                if (method_exists(PrintReceipt::class, 'dispatchSync')) {
+                    PrintReceipt::dispatchSync($sale);
+                } else {
+                    PrintReceipt::dispatch($sale)->onConnection('sync');
+                }
+            }
+        } catch (\Throwable $e) {
+            $printError = $e->getMessage();
+            $printMessage = 'Transaksi berhasil disimpan, tetapi cetak struk gagal: '.$printError;
+            Log::error('Auto print dispatch failed: '.$e->getMessage());
+        }
+
+        return redirect()->route('sales.create')
+            ->with('pos_success', $printError === null)
+            ->with('pos_message', $printMessage)
+            ->with('pos_sale_id', $sale->id)
+            ->with('pos_error', $printError);
     }
 
     /**
@@ -136,6 +163,9 @@ class SaleController extends Controller
     {
         $sale->load(['items', 'user']);
 
-        return view('sales.receipt', compact('sale'));
+        return view('sales.receipt', [
+            'sale' => $sale,
+            'logoDataUri' => null,
+        ]);
     }
 }

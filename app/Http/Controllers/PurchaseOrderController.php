@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Item;
@@ -13,7 +15,7 @@ class PurchaseOrderController extends Controller
 {
     public function index(Request $request)
     {
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'user'])
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'user', 'items.item'])
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->latest()
             ->paginate(10)
@@ -26,6 +28,7 @@ class PurchaseOrderController extends Controller
     {
         $suppliers = Supplier::orderBy('name')->get();
         $items = Item::orderBy('name')->get();
+
         return view('purchase_orders.create', compact('suppliers', 'items'));
     }
 
@@ -49,7 +52,7 @@ class PurchaseOrderController extends Controller
             }
 
             $po = PurchaseOrder::create([
-                'po_number' => 'PO-' . now()->format('Ymd') . '-' . str_pad((PurchaseOrder::count() + 1), 4, '0', STR_PAD_LEFT),
+                'po_number' => 'PO-'.now()->format('Ymd').'-'.str_pad((PurchaseOrder::count() + 1), 4, '0', STR_PAD_LEFT),
                 'supplier_id' => $validated['supplier_id'],
                 'user_id' => $request->user()->id,
                 'status' => 'draft',
@@ -75,6 +78,7 @@ class PurchaseOrderController extends Controller
     public function show(PurchaseOrder $purchaseOrder)
     {
         $purchaseOrder->load(['supplier', 'user', 'items.item']);
+
         return view('purchase_orders.show', compact('purchaseOrder'));
     }
 
@@ -85,9 +89,11 @@ class PurchaseOrderController extends Controller
         ]);
 
         if ($validated['status'] === 'received' && $purchaseOrder->status !== 'received') {
-            DB::transaction(function () use ($purchaseOrder, $request) {
+            DB::transaction(function () use ($purchaseOrder, $request): void {
                 foreach ($purchaseOrder->items as $line) {
-                    $line->item->increment('current_stock', $line->quantity);
+                    // Lock untuk mencegah race condition pada concurrent requests
+                    $item = Item::lockForUpdate()->findOrFail($line->item_id);
+                    $item->increment('current_stock', $line->quantity);
 
                     StockMovement::create([
                         'item_id' => $line->item_id,
@@ -95,8 +101,8 @@ class PurchaseOrderController extends Controller
                         'quantity' => $line->quantity,
                         'reference_type' => 'purchase_order',
                         'reference_id' => $purchaseOrder->id,
-                        'notes' => 'Penerimaan ' . $purchaseOrder->po_number,
-                        'user_id' => $request->user()->id,
+                        'notes' => 'Penerimaan '.$purchaseOrder->po_number,
+                        'user_id' => $request->user()?->id,
                     ]);
                 }
 

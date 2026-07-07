@@ -15,7 +15,7 @@ class EnsureRole
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->getRoleName(), $roles, true)) {
+        if (! $user || ! in_array($user->getRoleName(), $roles, true)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 

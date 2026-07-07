@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use App\Traits\RecordsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\RecordsActivity;
 
 class Sale extends Model
 {
@@ -30,5 +32,10 @@ class Sale extends Model
     public function items()
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    public function printFile()
+    {
+        return $this->hasOne(PrintFile::class);
     }
 }

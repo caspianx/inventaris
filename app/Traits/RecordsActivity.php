@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use App\Models\ActivityLog;
@@ -58,12 +60,12 @@ trait RecordsActivity
 
         // Build a readable description / keterangan
         if ($event === 'created') {
-            $description = "Membuat {$subjectClass}" . ($subjectName ? " '{$subjectName}'" : " #{$this->getKey()}");
+            $description = "Membuat {$subjectClass}".($subjectName ? " '{$subjectName}'" : " #{$this->getKey()}");
         } elseif ($event === 'updated') {
             $changedFields = $changes ? implode(', ', array_keys((array) $changes)) : '';
-            $description = "Mengubah {$subjectClass}" . ($subjectName ? " '{$subjectName}'" : " #{$this->getKey()}") . ($changedFields ? " (fields: {$changedFields})" : '');
+            $description = "Mengubah {$subjectClass}".($subjectName ? " '{$subjectName}'" : " #{$this->getKey()}").($changedFields ? " (fields: {$changedFields})" : '');
         } else {
-            $description = "Menghapus {$subjectClass}" . ($subjectName ? " '{$subjectName}'" : " #{$this->getKey()}");
+            $description = "Menghapus {$subjectClass}".($subjectName ? " '{$subjectName}'" : " #{$this->getKey()}");
         }
 
         ActivityLog::create([

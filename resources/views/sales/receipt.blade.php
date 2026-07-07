@@ -4,10 +4,18 @@
     <meta charset="UTF-8">
     <title>Struk {{ $sale->invoice_number }}</title>
     <style>
+        @php
+            $receiptWidth = match($storeSetting->receipt_size ?? '80mm') {
+                '58mm' => '220px',
+                '80mm' => '300px',
+                'roll' => '340px',
+                default => '300px',
+            };
+        @endphp
         body {
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            width: 300px;
+            width: {{ $receiptWidth }};
             margin: 0 auto;
             padding: 12px;
             color: #000;
@@ -43,40 +51,74 @@
 
     <div class="toolbar no-print">
         <button onclick="window.print()">Cetak Struk</button>
-        @if(auth()->user()->canAccess('sales.create'))
+        @if(optional(auth()->user())->canAccess('sales.create'))
             <a href="{{ route('sales.create') }}">Transaksi Baru</a>
         @endif
-        @if(auth()->user()->canAccess('sales.view'))
+        @if(optional(auth()->user())->canAccess('sales.view'))
             <a href="{{ route('sales.index') }}">Riwayat Transaksi</a>
         @endif
     </div>
 
     <div class="center">
-        @if(!empty($storeSetting->logo_path))
+        @if(!empty($storeSetting->show_receipt_logo) && isset($logoDataUri) && !empty($logoDataUri))
+            <img src="{{ $logoDataUri }}" alt="Logo {{ $storeSetting->name }}" class="store-logo"><br>
+        @elseif(!empty($storeSetting->show_receipt_logo) && !empty($storeSetting->logo_path))
             <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo {{ $storeSetting->name }}" class="store-logo"><br>
         @endif
-        <strong>{{ strtoupper($storeSetting->name ?? 'Inventory App') }}</strong><br>
+        <strong>{{ strtoupper($storeSetting->receipt_header_title ?? $storeSetting->name ?? 'Inventory App') }}</strong><br>
+        @if(!empty($storeSetting->receipt_header_subtitle))
+            <span>{{ $storeSetting->receipt_header_subtitle }}</span><br>
+        @endif
         @if(!empty($storeSetting->address))
             {!! nl2br(e($storeSetting->address)) !!}<br>
+        @endif
+        @if(!empty($storeSetting->receipt_header_extra))
+            <span>{{ $storeSetting->receipt_header_extra }}</span><br>
         @endif
         ------------------------
     </div>
     <div class="line"></div>
 
     <table>
-        <tr><td>No. Invoice</td><td class="right">{{ $sale->invoice_number }}</td></tr>
-        <tr><td>Tanggal</td><td class="right">{{ $sale->created_at->format('d/m/Y H:i') }}</td></tr>
-        <tr><td>Kasir</td><td class="right">{{ $sale->user->name ?? '-' }}</td></tr>
+        @if($storeSetting->receipt_show_invoice_number)
+            <tr><td>No. Invoice</td><td class="right">{{ $sale->invoice_number }}</td></tr>
+        @endif
+        @if($storeSetting->receipt_show_date_time)
+            <tr><td>Tanggal</td><td class="right">{{ $sale->created_at->format('d/m/Y H:i') }}</td></tr>
+        @endif
+        @if($storeSetting->receipt_show_cashier)
+            <tr><td>{{ $storeSetting->receipt_cashier_label }}</td><td class="right">{{ $sale->user->name ?? '-' }}</td></tr>
+        @endif
+        @if($storeSetting->receipt_show_table && $sale->notes)
+            <tr><td>{{ $storeSetting->receipt_table_label }}</td><td class="right">{{ $sale->notes }}</td></tr>
+        @endif
     </table>
     <div class="line"></div>
 
     @foreach($sale->items as $item)
-        <div class="item-name">{{ $item->item_name }}</div>
+        @php
+            $itemLine = $item->item_name;
+            $details = [];
+            if ($storeSetting->receipt_show_item_quantity) {
+                $details[] = $item->quantity . 'x';
+            }
+            if ($storeSetting->receipt_show_item_price) {
+                $details[] = 'Rp ' . number_format($item->price, 0, ',', '.');
+            }
+            if ($storeSetting->receipt_show_item_subtotal) {
+                $details[] = 'Rp ' . number_format($item->subtotal, 0, ',', '.');
+            }
+        @endphp
+        <div class="item-name">{{ $itemLine }}</div>
         <table>
             <tr>
-                <td>{{ $item->quantity }} x Rp {{ number_format($item->price, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                <td>{{ implode(' ', $details) }}</td>
             </tr>
+            @if($storeSetting->receipt_show_item_sku && $item->item_sku)
+                <tr>
+                    <td class="text-muted small">{{ $item->item_sku }}</td>
+                </tr>
+            @endif
         </table>
     @endforeach
 

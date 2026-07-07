@@ -1,0 +1,14 @@
+--- Struk Belanja (80MM) ---
+*** SIMULASI ***
+[Logo: store-logo-1783322878.png]
+toko
+123214 321
+Tanggal: 2026-07-06 08:19:51
+No. Nota: 41
+Keterangan: Cetak simulasi
+---------------------
+123 x1  23
+---------------------
+Total: 23
+---------------------
+Terima kasih

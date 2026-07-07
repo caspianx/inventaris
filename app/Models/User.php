@@ -1,13 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\RecordsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
-use App\Traits\RecordsActivity;
 
 class User extends Authenticatable
 {
@@ -49,6 +50,13 @@ class User extends Authenticatable
         return $this->getRoleName() === 'staff';
     }
 
+    /**
+     * Check if user has access to a specific permission.
+     * Admin has access to all permissions.
+     *
+     * @param  string  $permission  Permission name to check
+     * @return bool True if user can access the permission
+     */
     public function canAccess(string $permission): bool
     {
         $roleName = $this->getRoleName();
@@ -60,7 +68,11 @@ class User extends Authenticatable
         $permissions = Cache::remember(
             "role_permissions.{$roleName}",
             now()->addMinutes(10),
-            fn () => \App\Models\RolePermission::where('role', $roleName)->pluck('permission')->all()
+            function (): array {
+                return RolePermission::where('role', $roleName)
+                    ->pluck('permission')
+                    ->all();
+            }
         );
 
         return in_array($permission, $permissions, true);

@@ -1,15 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
+
+use App\Models\Role;
+use Illuminate\Support\Facades\Schema;
 
 class RolePermissionRegistry
 {
+    /**
+     * Get all available roles in the application.
+     *
+     * @return array<string, string> Associative array of role names to labels
+     */
     public static function roles(): array
     {
         // Prefer roles from database if available, otherwise fallback to static list.
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('roles')) {
-                return \App\Models\Role::orderBy('name')->get()->mapWithKeys(fn ($r) => [ $r->name => ($r->label ?: ucfirst($r->name)) ])->all();
+            if (Schema::hasTable('roles')) {
+                return Role::orderBy('name')->get()->mapWithKeys(fn ($r) => [$r->name => ($r->label ?: ucfirst($r->name))])->all();
             }
         } catch (\Throwable $e) {
             // ignore and fallback
@@ -46,6 +56,9 @@ class RolePermissionRegistry
             'Data Master' => [
                 'categories.manage' => 'Kelola kategori',
                 'suppliers.manage' => 'Kelola supplier',
+            ],
+            'Laporan' => [
+                'reports.view' => 'Akses menu laporan import/export',
             ],
             'Purchase Order' => [
                 'purchase_orders.view' => 'Lihat purchase order',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\RolePermission;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
@@ -10,6 +11,7 @@ class RoleController extends Controller
     public function index()
     {
         $roles = Role::with(['permissions'])->withCount('users')->orderBy('name')->paginate(15);
+
         return view('roles.index', compact('roles'));
     }
 
@@ -54,7 +56,7 @@ class RoleController extends Controller
         }
 
         // Also remove any role_permissions entries for cleanliness.
-        \App\Models\RolePermission::where('role', $role->name)->delete();
+        RolePermission::where('role', $role->name)->delete();
 
         $role->delete();
 

@@ -1,15 +1,19 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\PrintFileController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StoreSettingController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -77,11 +81,41 @@ Route::middleware('auth')->group(function () {
     Route::resource('suppliers', SupplierController::class)
         ->except(['show'])
         ->middleware('permission:suppliers.manage');
+
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index')
+        ->middleware('permission:reports.view');
+    Route::get('/reports/export/{type}', [ReportController::class, 'export'])
+        ->name('reports.export')
+        ->middleware('permission:reports.view');
+    Route::post('/reports/import/{type}', [ReportController::class, 'import'])
+        ->name('reports.import')
+        ->middleware('permission:reports.view');
+
     Route::get('/store-settings', [StoreSettingController::class, 'edit'])
         ->name('store-settings.edit')
         ->middleware('permission:store_settings.manage');
     Route::put('/store-settings', [StoreSettingController::class, 'update'])
         ->name('store-settings.update')
+        ->middleware('permission:store_settings.manage');
+    Route::post('/store-settings/simulate-print', [StoreSettingController::class, 'simulatePrint'])
+        ->name('store-settings.simulate-print')
+        ->middleware('permission:store_settings.manage');
+    Route::get('/print-files', [PrintFileController::class, 'index'])
+        ->name('print-files.index')
+        ->middleware('permission:store_settings.manage');
+    Route::get('/print-files/download/{filename}', [PrintFileController::class, 'download'])
+        ->where('filename', '.*')
+        ->name('print-files.download')
+        ->middleware('permission:store_settings.manage');
+    Route::get('/print-files/reprint/{sale}', [PrintFileController::class, 'reprint'])
+        ->name('print-files.reprint')
+        ->middleware('permission:store_settings.manage');
+    Route::delete('/print-files/{print_file}', [PrintFileController::class, 'destroy'])
+        ->name('print-files.destroy')
+        ->middleware('permission:store_settings.manage');
+    Route::post('/print-files/bulk-delete', [PrintFileController::class, 'bulkDestroy'])
+        ->name('print-files.bulk-delete')
         ->middleware('permission:store_settings.manage');
     Route::resource('purchase-orders', PurchaseOrderController::class)
         ->only(['index', 'create', 'store', 'show'])
@@ -103,10 +137,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/role-permissions', [RolePermissionController::class, 'edit'])->name('role-permissions.edit');
         Route::put('/role-permissions', [RolePermissionController::class, 'update'])->name('role-permissions.update');
-        Route::resource('roles', \App\Http\Controllers\RoleController::class)->except(['show']);
+        Route::resource('roles', RoleController::class)->except(['show']);
     });
 
-    Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])
         ->name('activity-logs.index')
         ->middleware('permission:activity_logs.view');
 });

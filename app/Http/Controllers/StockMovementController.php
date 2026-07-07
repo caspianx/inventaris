@@ -44,7 +44,7 @@ class StockMovementController extends Controller
         $item = Item::findOrFail($validated['item_id']);
 
         if ($validated['type'] === 'out' && $item->current_stock < $validated['quantity']) {
-            return back()->withInput()->with('error', 'Stok tidak mencukupi. Stok tersedia: ' . $item->current_stock);
+            return back()->withInput()->with('error', 'Stok tidak mencukupi. Stok tersedia: '.$item->current_stock);
         }
 
         DB::transaction(function () use ($validated, $item, $request) {
