@@ -5,46 +5,47 @@
 <div class="card">
     <!-- FILTER & ACTION HEADER -->
     <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center gap-3" style="flex-wrap: wrap;">
-            <div style="flex-grow: 1; min-width: 250px;">
-                <form class="d-flex gap-2" method="GET" id="item-search-form">
-                    <div class="position-relative" style="flex-grow: 1;">
-                        <input type="text" name="search" id="item-search-input" class="form-control" placeholder="🔍 Cari nama/SKU..." value="{{ request('search') }}" autocomplete="off">
-                        <div id="item-search-suggestions" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1000; top: 100%;"></div>
-                    </div>
-                    <select name="category_id" class="form-select" style="max-width: 200px;">
-                        <option value="">Semua Kategori</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                </form>
+        <form class="d-flex flex-column gap-3" method="GET" id="item-search-form">
+            <!-- Row 1: Search, Category, Action Buttons -->
+            <div class="d-flex gap-2 align-items-center" style="flex-wrap: wrap;">
+                <div class="position-relative" style="flex-grow: 1; min-width: 250px;">
+                    <input type="text" name="search" id="item-search-input" class="form-control" placeholder="🔍 Cari nama/SKU..." value="{{ request('search') }}" autocomplete="off">
+                    <div id="item-search-suggestions" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1000; top: 100%;"></div>
+                </div>
+                <select name="category_id" class="form-select" style="max-width: 200px;">
+                    <option value="">Semua Kategori</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+                @if(auth()->user()->canAccess('items.create'))
+                    <a href="{{ route('items.create') }}" class="btn btn-primary" style="white-space: nowrap;">
+                        <i class="bi bi-plus-lg"></i> Tambah Barang
+                    </a>
+                @endif
             </div>
-            @if(auth()->user()->canAccess('items.create'))
-                <a href="{{ route('items.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg"></i> Tambah Barang
-                </a>
-            @endif
-        </div>
-        <div class="d-flex gap-3 mt-3" style="flex-wrap: wrap;">
-            <div class="form-check">
-                <input type="checkbox" name="low_stock" value="1" class="form-check-input" id="lowStock" {{ request('low_stock') ? 'checked' : '' }} onchange="document.getElementById('item-search-form').submit()">
-                <label class="form-check-label" for="lowStock" style="cursor: pointer;">
-                    <i class="bi bi-exclamation-circle"></i> Stok Menipis Saja
-                </label>
+
+            <!-- Row 2: Filters & Pagination -->
+            <div class="d-flex gap-3 align-items-center" style="flex-wrap: wrap;">
+                <div class="form-check mb-0">
+                    <input type="checkbox" name="low_stock" value="1" class="form-check-input" id="lowStock" {{ request('low_stock') ? 'checked' : '' }} onchange="this.form.submit()">
+                    <label class="form-check-label" for="lowStock" style="cursor: pointer; user-select: none;">
+                        <i class="bi bi-exclamation-circle"></i> Stok Menipis Saja
+                    </label>
+                </div>
+                <select name="per_page" class="form-select" style="max-width: 150px; width: auto;" onchange="this.form.submit()">
+                    @foreach([10, 25, 50, 100] as $option)
+                        <option value="{{ $option }}" {{ (int) request('per_page', 10) === $option ? 'selected' : '' }}>{{ $option }} / halaman</option>
+                    @endforeach
+                </select>
+                @if(auth()->user()->canAccess('items.print_barcode'))
+                    <button type="submit" form="print-barcode-form" id="print-selected-btn" class="btn btn-outline-primary" disabled style="margin-left: auto; white-space: nowrap;">
+                        <i class="bi bi-printer"></i> Cetak Barcode
+                        <span id="selected-count-label" style="margin-left: 0.5rem; font-weight: 600;"></span>
+                    </button>
+                @endif
             </div>
-            <select name="per_page" class="form-select" style="max-width: 150px;" onchange="document.getElementById('item-search-form').submit()">
-                @foreach([10, 25, 50, 100] as $option)
-                    <option value="{{ $option }}" {{ (int) request('per_page', 10) === $option ? 'selected' : '' }}>{{ $option }} / halaman</option>
-                @endforeach
-            </select>
-            @if(auth()->user()->canAccess('items.print_barcode'))
-                <button type="submit" form="print-barcode-form" id="print-selected-btn" class="btn btn-outline-primary" disabled>
-                    <i class="bi bi-printer"></i> Cetak Barcode
-                    <span id="selected-count-label" style="margin-left: 0.5rem; font-weight: 600;"></span>
-                </button>
-            @endif
-        </div>
+        </form>
     </div>
 
     <form id="print-barcode-form" method="GET" action="{{ route('items.print-barcode') }}" target="_blank"></form>
