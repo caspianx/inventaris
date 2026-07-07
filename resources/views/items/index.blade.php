@@ -8,7 +8,7 @@
         <div class="d-flex justify-content-between align-items-center gap-3" style="flex-wrap: wrap;">
             <div style="flex-grow: 1; min-width: 250px;">
                 <form class="d-flex gap-2" method="GET" id="item-search-form">
-                    <div class="position-relative flex-grow-1">
+                    <div class="position-relative" style="flex-grow: 1;">
                         <input type="text" name="search" id="item-search-input" class="form-control" placeholder="🔍 Cari nama/SKU..." value="{{ request('search') }}" autocomplete="off">
                         <div id="item-search-suggestions" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1000; top: 100%;"></div>
                     </div>

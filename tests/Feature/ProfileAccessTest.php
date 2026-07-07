@@ -13,6 +13,7 @@ class ProfileAccessTest extends TestCase
 
     public function test_profile_edit_requires_profile_edit_permission(): void
     {
+        /** @var User $user */
         $user = User::factory()->create([
             'name' => 'Staff User',
             'email' => 'staff@example.com',
@@ -26,6 +27,7 @@ class ProfileAccessTest extends TestCase
 
     public function test_profile_edit_allows_users_with_profile_edit_permission(): void
     {
+        /** @var User $user */
         $user = User::factory()->create([
             'name' => 'Staff User With Access',
             'email' => 'staff-access@example.com',

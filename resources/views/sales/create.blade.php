@@ -408,10 +408,10 @@
 
                 <!-- QUICK ACTIONS -->
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                    <button type="reset" class="btn btn-outline-secondary flex-grow-1" onclick="if(confirm('Hapus semua item?')) { cart=[]; renderCart(); }">
+                    <button type="reset" class="btn btn-outline-secondary" style="flex-grow: 1;" onclick="if(confirm('Hapus semua item?')) { cart=[]; renderCart(); }">
                         <i class="bi bi-arrow-counterclockwise"></i> Reset
                     </button>
-                    <a href="{{ route('sales.index') }}" class="btn btn-outline-primary flex-grow-1">
+                    <a href="{{ route('sales.index') }}" class="btn btn-outline-primary" style="flex-grow: 1;">
                         <i class="bi bi-clock-history"></i> Riwayat
                     </a>
                 </div>
