@@ -91,7 +91,7 @@ class SaleController extends Controller
                 }
 
                 $sale = Sale::create([
-                    'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad((Sale::count() + 1), 4, '0', STR_PAD_LEFT),
+                    'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad((string) (Sale::count() + 1), 4, '0', STR_PAD_LEFT),
                     'user_id' => $request->user()->id,
                     'subtotal' => $subtotal,
                     'discount' => $discount,
@@ -147,6 +147,16 @@ class SaleController extends Controller
             $printError = $e->getMessage();
             $printMessage = 'Transaksi berhasil disimpan, tetapi cetak struk gagal: '.$printError;
             Log::error('Auto print dispatch failed: '.$e->getMessage());
+        }
+
+        // Auto-open cash drawer if the user has the device and enabled auto-open.
+        try {
+            $user = $request->user();
+            if ($user && ($user->has_cash_drawer ?? false) && (($user->auto_open_cash_drawer ?? false) || $request->boolean('open_cash_drawer'))) {
+                app(\App\Services\CashDrawerService::class)->open($sale);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Auto open cash drawer failed: '.$e->getMessage());
         }
 
         return redirect()->route('sales.create')

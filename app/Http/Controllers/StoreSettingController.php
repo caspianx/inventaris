@@ -19,8 +19,9 @@ class StoreSettingController extends Controller
     {
         $storeSetting = StoreSetting::current();
         $printerOptions = $this->getAvailablePrinters();
+        $hasCashDrawer = Auth::user()?->has_cash_drawer ?? false;
 
-        return view('store_settings.edit', compact('storeSetting', 'printerOptions'));
+        return view('store_settings.edit', compact('storeSetting', 'printerOptions', 'hasCashDrawer'));
     }
 
     protected function getAvailablePrinters(): array
@@ -92,6 +93,8 @@ class StoreSettingController extends Controller
             'receipt_show_item_subtotal' => ['nullable', 'boolean'],
             'receipt_thank_you_text' => ['nullable', 'string', 'max:255'],
             'receipt_footer_note' => ['nullable', 'string'],
+            'cash_drawer_driver' => ['nullable', 'in:network,printer,none'],
+            'cash_drawer_address' => ['nullable', 'string', 'max:255'],
         ]);
 
         $storeSetting = StoreSetting::current();
@@ -128,6 +131,10 @@ class StoreSettingController extends Controller
         $data['receipt_show_item_subtotal'] = $request->boolean('receipt_show_item_subtotal');
         $data['receipt_thank_you_text'] = $validated['receipt_thank_you_text'] ?? 'Terima kasih atas kunjungan Anda!';
         $data['receipt_footer_note'] = $validated['receipt_footer_note'] ?? null;
+
+        // Cash drawer settings
+        $data['cash_drawer_driver'] = $validated['cash_drawer_driver'] ?? 'network';
+        $data['cash_drawer_address'] = $validated['cash_drawer_address'] ?? null;
 
         if ($request->boolean('remove_logo') && $storeSetting->logo_path) {
             File::delete(public_path($storeSetting->logo_path));
@@ -246,5 +253,72 @@ class StoreSettingController extends Controller
 
         return redirect()->route('print-files.index', ['sale_id' => $sale->id])
             ->with('success', 'Simulasi berhasil. Sale ID='.$sale->id.'. File struk tersedia di daftar Cetak Struk.');
+    }
+
+    public function testCashDrawer(Request $request)
+    {
+        $validated = $request->validate([
+            'cash_drawer_address' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $store = StoreSetting::current();
+        $address = $validated['cash_drawer_address'] ?? $store->cash_drawer_address;
+
+        if (! $address) {
+            return redirect()->route('store-settings.edit')->with('error', 'Alamat cash drawer belum diisi.');
+        }
+
+        // Create a small fake sale object to provide context to device
+        $fakeSale = (object) [
+            'id' => 0,
+            'invoice_number' => 'TEST-'.now()->format('YmdHis'),
+            'total' => 0,
+        ];
+
+        // Temporarily override store setting address for this test
+        $origAddress = $store->cash_drawer_address;
+        $store->cash_drawer_address = $address;
+
+        $result = app(\App\Services\CashDrawerService::class)->open($fakeSale);
+
+        // restore
+        $store->cash_drawer_address = $origAddress;
+
+        if (is_array($result)) {
+            if (! empty($result['success'])) {
+                $msg = 'Percobaan membuka cash drawer terkirim.';
+                if (! empty($result['status'])) {
+                    $msg .= ' HTTP status: '.$result['status'].'.';
+                }
+                if (! empty($result['body'])) {
+                    $msg .= ' Response: '.mb_strimwidth($result['body'], 0, 400, '...');
+                }
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => true, 'message' => $msg], 200);
+                }
+
+                return redirect()->route('store-settings.edit')->with('success', $msg);
+            }
+
+            $err = $result['error'] ?? ($result['body'] ?? 'Unknown error');
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Percobaan membuka cash drawer gagal: '.$err], 500);
+            }
+
+            return redirect()->route('store-settings.edit')->with('error', 'Percobaan membuka cash drawer gagal: '.$err);
+        }
+
+        // fallback boolean
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => (bool) $result, 'message' => 'Percobaan membuka cash drawer '.($result ? 'terkirim' : 'gagal')], $result ? 200 : 500);
+        }
+
+        if ($result) {
+            return redirect()->route('store-settings.edit')->with('success', 'Percobaan membuka cash drawer terkirim.');
+        }
+
+        return redirect()->route('store-settings.edit')->with('error', 'Percobaan membuka cash drawer gagal — cek alamat dan koneksi perangkat.');
     }
 }

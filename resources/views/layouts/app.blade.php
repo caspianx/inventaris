@@ -8,104 +8,828 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        body { background: #f4f6f9; }
-        .sidebar { min-height: 100vh; background: #1e2a3a; }
-        .sidebar a { color: #c9d3de; text-decoration: none; display: block; padding: .6rem 1rem; border-radius: 6px; }
-        .sidebar a:hover, .sidebar a.active { background: #33445c; color: #fff; }
-        .sidebar .brand { color: #fff; font-weight: 600; padding: 1rem; display: flex; align-items: center; gap: .55rem; }
-        .sidebar .brand img { width: 30px; height: 30px; object-fit: contain; border-radius: 4px; background: #fff; padding: 2px; }
-        .card-stat { border: none; border-radius: 10px; }
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+        }
+
+        * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+        
+        body { 
+            background: var(--light); 
+            margin: 0; 
+            color: #1f2937;
+        }
+
+        /* SIDEBAR MODERNISASI */
+        .sidebar { 
+            min-height: 100vh; 
+            background: linear-gradient(180deg, var(--dark) 0%, #111827 100%);
+            overflow-y: scroll; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        }
+
+        .sidebar a { 
+            color: #cbd5e1;
+            text-decoration: none; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.875rem; 
+            padding: 0.875rem 1.25rem; 
+            border-radius: 8px; 
+            transition: all 0.25s ease; 
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin: 0.25rem 0.5rem;
+        }
+
+        .sidebar a:hover { 
+            background: rgba(99, 102, 241, 0.15);
+            color: #fff; 
+            transform: translateX(3px);
+            padding-left: 1.5rem;
+        }
+
+        .sidebar a.active { 
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: #fff; 
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .sidebar a i { 
+            min-width: 20px; 
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .brand { 
+            color: #fff; 
+            font-weight: 700; 
+            padding: 1.5rem 1.25rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.875rem; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .brand img { 
+            width: 40px; 
+            height: 40px; 
+            object-fit: contain; 
+            border-radius: 6px; 
+            background: #fff; 
+            padding: 2px;
+        }
+
+        .sidebar .brand span { 
+            font-size: 1rem; 
+            line-height: 1.3;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .sidebar .menu-section { 
+            margin-top: 1.5rem; 
+        }
+
+        .sidebar .menu-label { 
+            font-size: 0.7rem; 
+            font-weight: 700; 
+            color: #94a3b8;
+            text-transform: uppercase; 
+            padding: 1rem 1.5rem 0.75rem; 
+            letter-spacing: 0.8px;
+        }
+
+        .sidebar hr { 
+            margin: 1.5rem 0; 
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        /* MAIN LAYOUT */
+        .main-wrapper { 
+            display: flex; 
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar h4 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .topbar h4 i {
+            font-size: 1.75rem;
+            color: var(--primary);
+        }
+
+        main.main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* PROFILE AVATAR */
+        .profile-avatar-btn { 
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+            gap: 1rem;
+        }
+
+        .profile-avatar-btn:hover { 
+            transform: scale(1.05);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 0.9rem;
+        }
+
+        .profile-info .name {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .profile-info .role {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+        }
+
+        .profile-avatar { 
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #fff;
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .profile-avatar:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .dropdown-menu { 
+            min-width: 280px;
+            margin-top: 0.75rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            padding: 0.5rem 0;
+        }
+
+        .dropdown-header { 
+            padding: 1rem 1.25rem;
+            background: var(--gray-50);
+            border-radius: 6px 6px 0 0;
+        }
+
+        .dropdown-header strong {
+            display: block;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .dropdown-header small {
+            color: var(--gray-500);
+        }
+
+        .dropdown-item { 
+            padding: 0.875rem 1.25rem;
+            text-decoration: none;
+            color: var(--gray-700);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dropdown-item:hover { 
+            background-color: var(--gray-100);
+            color: var(--primary);
+        }
+
+        .dropdown-item.text-danger:hover { 
+            background-color: #fee2e2;
+            color: var(--danger);
+        }
+
+        .dropdown-item i {
+            font-size: 1rem;
+            width: 20px;
+        }
+
+        .dropdown-divider {
+            margin: 0.5rem 0;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        /* ALERTS */
+        .alert {
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .alert i {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-warning {
+            background: #fffbeb;
+            color: #78350f;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #7f1d1d;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-info {
+            background: #ecf9ff;
+            color: #0c4a6e;
+            border-left: 4px solid var(--info);
+        }
+
+        .alert ul {
+            margin-bottom: 0;
+            padding-left: 1.5rem;
+        }
+
+        .alert li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* CARDS MODERN */
+        .card {
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: all 0.25s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+            border-radius: 9px 9px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-header i {
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-stat {
+            border: none;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid var(--gray-200);
+            transition: all 0.25s ease;
+        }
+
+        .card-stat:hover {
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .card-stat .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-stat .text-muted {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            margin-bottom: 0.75rem;
+        }
+
+        .card-stat .fs-3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .card-stat .fs-4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        /* BUTTONS MODERN */
+        .btn {
+            border-radius: 6px;
+            font-weight: 600;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #7c3aed;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.875rem;
+            font-size: 0.85rem;
+        }
+
+        .btn i {
+            margin-right: 0.375rem;
+        }
+
+        /* TABLES MODERN */
+        .table {
+            background: #fff;
+        }
+
+        .table thead {
+            background: var(--gray-50);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .table thead th {
+            color: var(--gray-700);
+            font-weight: 700;
+            padding: 1rem 1.25rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        .table-danger {
+            background: #fee2e2 !important;
+        }
+
+        /* FORMS MODERN */
+        .form-control, .form-select {
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            outline: none;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* BADGES */
+        .badge {
+            padding: 0.5rem 0.875rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .badge.bg-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge.bg-danger {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .badge.bg-warning {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .badge.bg-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        /* FOOTER */
+        footer {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -300px;
+                top: 0;
+                width: 300px;
+                height: 100vh;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .main-wrapper {
+                flex-direction: column;
+            }
+
+            main.main-content {
+                padding: 1rem;
+            }
+
+            .topbar {
+                padding: 1rem;
+            }
+
+            .topbar h4 {
+                font-size: 1.25rem;
+            }
+
+            .profile-info {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="d-flex">
-    <nav class="sidebar p-2" style="width: 240px;">
+<div class="main-wrapper">
+    <!-- SIDEBAR MODERN -->
+    <nav class="sidebar p-3" style="width: 280px; flex-shrink: 0;">
         <div class="brand">
             @if(!empty($storeSetting->logo_path))
                 <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo {{ $storeSetting->name }}">
             @else
                 <i class="bi bi-box-seam"></i>
             @endif
-            <span>{{ $storeSetting->name ?? 'Inventory App' }}</span>
+            <span>{{ $storeSetting->name ?? 'Inventory' }}</span>
         </div>
+
+        <!-- DASHBOARD -->
         @if(auth()->user()->canAccess('dashboard.view'))
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+            <div class="menu-section">
+                <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-speedometer2"></i> 
+                    <span>Dashboard</span>
+                </a>
+            </div>
         @endif
-        @if(auth()->user()->canAccess('items.view'))
-            <a href="{{ route('items.index') }}" class="{{ request()->routeIs('items.*') ? 'active' : '' }}"><i class="bi bi-box"></i> Master Barang</a>
+
+        <!-- MASTER DATA -->
+        @if(auth()->user()->canAccess('items.view') || auth()->user()->canAccess('categories.manage') || auth()->user()->canAccess('suppliers.manage'))
+            <div class="menu-section">
+                <div class="menu-label">Master Data</div>
+                @if(auth()->user()->canAccess('items.view'))
+                    <a href="{{ route('items.index') }}" class="{{ request()->routeIs('items.*') ? 'active' : '' }}">
+                        <i class="bi bi-box-seam"></i> <span>Barang</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('categories.manage'))
+                    <a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}">
+                        <i class="bi bi-tag"></i> <span>Kategori</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('suppliers.manage'))
+                    <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
+                        <i class="bi bi-truck"></i> <span>Supplier</span>
+                    </a>
+                @endif
+            </div>
         @endif
-        @if(auth()->user()->canAccess('sales.view') || auth()->user()->canAccess('sales.create'))
-            <a href="{{ auth()->user()->canAccess('sales.view') ? route('sales.index') : route('sales.create') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}"><i class="bi bi-cash-coin"></i> Kasir</a>
+
+        <!-- TRANSAKSI -->
+        @if(auth()->user()->canAccess('sales.view') || auth()->user()->canAccess('sales.create') || auth()->user()->canAccess('stock_movements.view') || auth()->user()->canAccess('purchase_orders.view') || auth()->user()->canAccess('store_settings.manage'))
+            <div class="menu-section">
+                <div class="menu-label">Transaksi</div>
+                @if(auth()->user()->canAccess('sales.view') || auth()->user()->canAccess('sales.create'))
+                    <a href="{{ auth()->user()->canAccess('sales.view') ? route('sales.index') : route('sales.create') }}" class="{{ request()->routeIs('sales.*') ? 'active' : '' }}">
+                        <i class="bi bi-cash-coin"></i> <span>Kasir/Penjualan</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('stock_movements.view'))
+                    <a href="{{ route('stock-movements.index') }}" class="{{ request()->routeIs('stock-movements.*') ? 'active' : '' }}">
+                        <i class="bi bi-arrow-left-right"></i> <span>Stok Masuk/Keluar</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('purchase_orders.view'))
+                    <a href="{{ route('purchase-orders.index') }}" class="{{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}">
+                        <i class="bi bi-clipboard-check"></i> <span>Purchase Order</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('store_settings.manage'))
+                    <a href="{{ route('print-files.index') }}" class="{{ request()->routeIs('print-files.*') ? 'active' : '' }}">
+                        <i class="bi bi-printer"></i> <span>Cetak Struk</span>
+                    </a>
+                @endif
+            </div>
         @endif
-        @if(auth()->user()->canAccess('stock_movements.view'))
-            <a href="{{ route('stock-movements.index') }}" class="{{ request()->routeIs('stock-movements.*') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i> Stok Masuk/Keluar</a>
+
+        <!-- LAPORAN & INFORMASI -->
+        @if(auth()->user()->canAccess('reports.view') || auth()->user()->canAccess('store_settings.manage'))
+            <div class="menu-section">
+                <div class="menu-label">Informasi</div>
+                @if(auth()->user()->canAccess('reports.view'))
+                    <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                        <i class="bi bi-file-earmark-chart"></i> <span>Laporan</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('store_settings.manage'))
+                    <a href="{{ route('store-settings.edit') }}" class="{{ request()->routeIs('store-settings.*') ? 'active' : '' }}">
+                        <i class="bi bi-gear"></i> <span>Pengaturan Toko</span>
+                    </a>
+                @endif
+            </div>
         @endif
-        @if(auth()->user()->canAccess('categories.manage'))
-            <a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}"><i class="bi bi-tags"></i> Kategori</a>
+
+        <!-- ADMIN -->
+        @if(auth()->user()->canAccess('users.manage') || auth()->user()->canAccess('role_permissions.manage') || auth()->user()->canAccess('activity_logs.view'))
+            <div class="menu-section">
+                <div class="menu-label">Admin</div>
+                @if(auth()->user()->canAccess('users.manage'))
+                    <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
+                        <i class="bi bi-people-fill"></i> <span>Manajemen User</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('role_permissions.manage'))
+                    <a href="{{ route('role-permissions.edit') }}" class="{{ request()->routeIs('role-permissions.*') ? 'active' : '' }}">
+                        <i class="bi bi-shield-lock"></i> <span>Akses Role</span>
+                    </a>
+                @endif
+                @if(auth()->user()->isAdmin())
+                    <a href="{{ route('roles.index') }}" class="{{ request()->routeIs('roles.*') ? 'active' : '' }}">
+                        <i class="bi bi-person-badge"></i> <span>Manajemen Role</span>
+                    </a>
+                @endif
+                @if(auth()->user()->canAccess('activity_logs.view'))
+                    <a href="{{ route('activity-logs.index') }}" class="{{ request()->routeIs('activity-logs.*') ? 'active' : '' }}">
+                        <i class="bi bi-journal-text"></i> <span>Riwayat Audit</span>
+                    </a>
+                @endif
+            </div>
         @endif
-        @if(auth()->user()->canAccess('suppliers.manage'))
-            <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><i class="bi bi-truck"></i> Supplier</a>
-        @endif
-        @if(auth()->user()->canAccess('reports.view'))
-            <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-spreadsheet"></i> Laporan</a>
-        @endif
-        @if(auth()->user()->canAccess('store_settings.manage'))
-            <a href="{{ route('store-settings.edit') }}" class="{{ request()->routeIs('store-settings.*') ? 'active' : '' }}"><i class="bi bi-shop"></i> Pengaturan Toko</a>
-            <a href="{{ route('print-files.index') }}" class="{{ request()->routeIs('print-files.*') ? 'active' : '' }}"><i class="bi bi-printer"></i> Cetak Struk</a>
-        @endif
-        @if(auth()->user()->canAccess('purchase_orders.view'))
-            <a href="{{ route('purchase-orders.index') }}" class="{{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}"><i class="bi bi-clipboard-check"></i> Purchase Order</a>
-        @endif
-        @if(auth()->user()->canAccess('users.manage'))
-            <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}"><i class="bi bi-people"></i> Manajemen User</a>
-        @endif
-        @if(auth()->user()->canAccess('role_permissions.manage'))
-            <a href="{{ route('role-permissions.edit') }}" class="{{ request()->routeIs('role-permissions.*') ? 'active' : '' }}"><i class="bi bi-shield-lock"></i> Akses Role</a>
-        @endif
-        @if(auth()->user()->canAccess('activity_logs.view'))
-            <a href="{{ route('activity-logs.index') }}" class="{{ request()->routeIs('activity-logs.*') ? 'active' : '' }}"><i class="bi bi-journal-text"></i> Riwayat Audit</a>
-        @endif
-        <hr class="text-secondary">
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button class="btn btn-sm btn-outline-light w-100"><i class="bi bi-box-arrow-right"></i> Keluar</button>
-        </form>
+
+        <hr class="mt-auto mb-0">
     </nav>
 
-    <main class="flex-grow-1 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0">@yield('title', 'Dashboard')</h4>
-            <div class="text-muted">
-                {{ auth()->user()->name }}
-                <span class="badge bg-secondary text-uppercase">{{ auth()->user()->role }}</span>
+    <!-- MAIN CONTENT -->
+    <div style="flex-grow: 1; display: flex; flex-direction: column;">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <h4>
+                @if(request()->routeIs('dashboard'))
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                @elseif(request()->routeIs('items.*'))
+                    <i class="bi bi-box-seam"></i> Master Barang
+                @elseif(request()->routeIs('categories.*'))
+                    <i class="bi bi-tag"></i> Kategori
+                @elseif(request()->routeIs('suppliers.*'))
+                    <i class="bi bi-truck"></i> Supplier
+                @elseif(request()->routeIs('sales.*'))
+                    <i class="bi bi-cash-coin"></i> Kasir/Penjualan
+                @elseif(request()->routeIs('stock-movements.*'))
+                    <i class="bi bi-arrow-left-right"></i> Stok Masuk/Keluar
+                @elseif(request()->routeIs('purchase-orders.*'))
+                    <i class="bi bi-clipboard-check"></i> Purchase Order
+                @elseif(request()->routeIs('print-files.*'))
+                    <i class="bi bi-printer"></i> Cetak Struk
+                @elseif(request()->routeIs('reports.*'))
+                    <i class="bi bi-file-earmark-chart"></i> Laporan
+                @elseif(request()->routeIs('store-settings.*'))
+                    <i class="bi bi-gear"></i> Pengaturan Toko
+                @elseif(request()->routeIs('users.*'))
+                    <i class="bi bi-people-fill"></i> Manajemen User
+                @elseif(request()->routeIs('role-permissions.*'))
+                    <i class="bi bi-shield-lock"></i> Akses Role
+                @elseif(request()->routeIs('activity-logs.*'))
+                    <i class="bi bi-journal-text"></i> Riwayat Audit
+                @else
+                    @yield('title', 'Dashboard')
+                @endif
+            </h4>
+            
+            <!-- USER PROFILE DROPDOWN -->
+            <div class="dropdown">
+                <button class="profile-avatar-btn" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ auth()->user()->name }}">
+                    <div class="profile-info">
+                        <div class="name">{{ auth()->user()->name }}</div>
+                        <div class="role">{{ auth()->user()->role->name ?? 'User' }}</div>
+                    </div>
+                    <div class="profile-avatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                    <li>
+                        <div class="dropdown-header">
+                            <strong>{{ auth()->user()->name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ auth()->user()->email ?? 'Admin' }}</small>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    @if(auth()->user()->canAccess('profile.edit'))
+                        <li>
+                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                <i class="bi bi-pencil"></i> Edit Profil
+                            </a>
+                        </li>
+                    @endif
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form action="{{ route('logout') }}" method="POST" class="w-100">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-box-arrow-right"></i> Log Out
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if(session('warning'))
-            <div class="alert alert-warning">{{ session('warning') }}</div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-        @if($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <!-- PAGE CONTENT -->
+        <main class="main-content">
+            @if(session('success'))
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    <div>{{ session('success') }}</div>
+                </div>
+            @endif
+            @if(session('warning'))
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <div>{{ session('warning') }}</div>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i>
+                    <div>{{ session('error') }}</div>
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-        @yield('content')
+            @yield('content')
 
-        <footer class="text-center text-muted small mt-5 pt-3 border-top">
-            &copy; {{ date('Y') }} {{ $storeSetting->name ?? 'Inventory App' }}. Seluruh hak cipta dilindungi.
-        </footer>
-    </main>
+            <footer class="mt-5 pt-4 border-top">
+                <p class="text-center text-muted small mb-0">
+                    &copy; {{ date('Y') }} <strong>{{ $storeSetting->name ?? 'Inventory App' }}</strong> • Seluruh hak cipta dilindungi
+                </p>
+            </footer>
+        </main>
+    </div>
 </div>
 
 <!-- Modal konfirmasi modern, menggantikan popup confirm() bawaan browser -->

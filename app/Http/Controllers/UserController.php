@@ -57,11 +57,20 @@ class UserController extends Controller
     {
         $roleNames = Role::pluck('name')->all();
 
+        // If name already exists, return early with a suggested alternative
+        $name = trim((string) $request->input('name'));
+        if ($name !== '' && User::where('name', $name)->exists()) {
+            $suggestion = $this->makeUniqueNameSuggestion($name);
+            return back()->withInput()->withErrors(['name' => 'Nama tersebut sudah digunakan. Gunakan saran nama berikut atau pilih lain.'])->with('suggested_name', $suggestion);
+        }
+
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:users,name'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'role' => ['required', 'in:'.implode(',', $roleNames)],
+        ], [
+            'name.unique' => 'Nama tersebut sudah digunakan. Silakan pilih nama lain.',
         ]);
 
         $role = Role::where('name', $validated['role'])->first();
@@ -88,11 +97,21 @@ class UserController extends Controller
     {
         $roleNames = Role::pluck('name')->all();
 
+        // If name already exists on another user, return with suggestion
+        $name = trim((string) $request->input('name'));
+        $other = User::where('name', $name)->where('id', '!=', $user->id)->first();
+        if ($name !== '' && $other) {
+            $suggestion = $this->makeUniqueNameSuggestion($name);
+            return back()->withInput()->withErrors(['name' => 'Nama tersebut sudah digunakan oleh pengguna lain.'])->with('suggested_name', $suggestion);
+        }
+
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:users,name,'.$user->id],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'role' => ['required', 'in:'.implode(',', $roleNames)],
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+        ], [
+            'name.unique' => 'Nama tersebut sudah digunakan. Silakan pilih nama lain.',
         ]);
 
         // Cegah admin tidak sengaja menurunkan/menghilangkan role admin miliknya sendiri
@@ -113,6 +132,40 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
+    }
+
+    /**
+     * Generate a unique name suggestion by appending a numeric suffix.
+     */
+    protected function makeUniqueNameSuggestion(string $base): string
+    {
+        // Suggestion format: base + number (no underscore), keep only alnum and dash/underscore
+        $baseClean = preg_replace('/[^A-Za-z0-9\-]/', '', str_replace(' ', '', $base));
+        $candidate = $baseClean;
+        $i = 1;
+        while (User::where('name', $candidate)->exists()) {
+            $candidate = $baseClean.'-'.$i;
+            $i++;
+            if ($i > 1000) break;
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * AJAX endpoint to check if a name is available and provide a suggestion.
+     */
+    public function checkName(Request $request)
+    {
+        $name = trim((string) $request->query('name'));
+        if ($name === '') {
+            return response()->json(['available' => false, 'suggestion' => ''], 200);
+        }
+
+        $available = ! User::where('name', $name)->exists();
+        $suggestion = $available ? $name : $this->makeUniqueNameSuggestion($name);
+
+        return response()->json(['available' => $available, 'suggestion' => $suggestion], 200);
     }
 
     public function destroy(Request $request, User $user)

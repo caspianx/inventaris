@@ -8,7 +8,11 @@
             @csrf
             <div class="mb-3">
                 <label class="form-label">Nama</label>
-                <input type="text" name="name" class="form-control" value="{{ old('name') }}" required autofocus>
+                <input type="text" name="name" id="user-name-input" class="form-control" value="{{ old('name') }}" required autofocus>
+                @if(session('suggested_name'))
+                    <div class="form-text text-warning">Nama sudah dipakai. Saran: <a href="#" id="apply-suggested-name">{{ session('suggested_name') }}</a></div>
+                @endif
+                <div id="name-suggestion-area" class="form-text text-info" style="display:none;"></div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Email</label>
@@ -35,4 +39,47 @@
         </form>
     </div>
 </div>
+<script>
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'apply-suggested-name') {
+            e.preventDefault();
+            var suggested = e.target.innerText.trim();
+            var input = document.getElementById('user-name-input');
+            if (input) input.value = suggested;
+            e.target.parentNode.style.display = 'none';
+        }
+    });
+
+    // Debounced AJAX check for name availability
+    (function() {
+        var timer = null;
+        var input = document.getElementById('user-name-input');
+        var area = document.getElementById('name-suggestion-area');
+        if (!input) return;
+        input.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(async function () {
+                var name = input.value.trim();
+                if (!name) { area.style.display = 'none'; return; }
+                try {
+                    const url = new URL("{{ route('users.check-name') }}", window.location.origin);
+                    url.searchParams.set('name', name);
+                    const res = await fetch(url.toString(), { credentials: 'same-origin' });
+                    if (!res.ok) throw new Error('Network');
+                    const json = await res.json();
+                    if (json.available) {
+                        area.innerText = 'Nama tersedia.';
+                        area.style.color = 'green';
+                    } else {
+                        area.innerHTML = 'Nama sudah dipakai. Saran: <a href="#" id="apply-suggested-name">'+json.suggestion+'</a>';
+                        area.style.color = 'orange';
+                    }
+                    area.style.display = 'block';
+                } catch (err) {
+                    area.style.display = 'none';
+                }
+            }, 400);
+        });
+    })();
+</script>
 @endsection

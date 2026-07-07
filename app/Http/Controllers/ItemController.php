@@ -28,7 +28,7 @@ class ItemController extends Controller
         $nextNumber = $lastNumber + 1;
 
         do {
-            $sku = 'BRG-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            $sku = 'BRG-'.str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
             $nextNumber++;
         } while (Item::where('sku', $sku)->exists());
 

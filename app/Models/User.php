@@ -22,6 +22,11 @@ class User extends Authenticatable
         'role_id',
     ];
 
+    protected $casts = [
+        'has_cash_drawer' => 'boolean',
+        'auto_open_cash_drawer' => 'boolean',
+    ];
+
     protected $hidden = [
         'password',
         'remember_token',
@@ -68,7 +73,7 @@ class User extends Authenticatable
         $permissions = Cache::remember(
             "role_permissions.{$roleName}",
             now()->addMinutes(10),
-            function (): array {
+            function () use ($roleName): array {
                 return RolePermission::where('role', $roleName)
                     ->pluck('permission')
                     ->all();

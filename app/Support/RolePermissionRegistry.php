@@ -68,6 +68,7 @@ class RolePermissionRegistry
             ],
             'Pengaturan' => [
                 'store_settings.manage' => 'Kelola profil toko',
+                'profile.edit' => 'Edit profil',
                 'users.manage' => 'Kelola user',
                 'role_permissions.manage' => 'Kelola akses role',
                 'activity_logs.view' => 'Lihat riwayat audit',
@@ -81,5 +82,55 @@ class RolePermissionRegistry
             ->flatMap(fn (array $permissions) => array_keys($permissions))
             ->values()
             ->all();
+    }
+
+    public static function defaults(string $roleName): array
+    {
+        // If a custom preset exists in DB with this name, prefer it.
+        try {
+            if (Schema::hasTable('role_permission_presets')) {
+                $preset = \App\Models\RolePermissionPreset::where('name', $roleName)->first();
+                if ($preset) {
+                    return $preset->permissions ?? [];
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore and fall back to static defaults
+        }
+
+        return match ($roleName) {
+            'admin' => static::all(),
+            'manager' => [
+                'dashboard.view',
+                'items.view',
+                'items.create',
+                'items.edit',
+                'items.print_barcode',
+                'sales.view',
+                'sales.create',
+                'stock_movements.view',
+                'stock_movements.create',
+                'categories.manage',
+                'suppliers.manage',
+                'reports.view',
+                'purchase_orders.view',
+                'purchase_orders.create',
+                'purchase_orders.update_status',
+                'profile.edit',
+                'store_settings.manage',
+            ],
+            'staff' => [
+                'dashboard.view',
+                'items.view',
+                'sales.view',
+                'sales.create',
+                'stock_movements.view',
+                'profile.edit',
+            ],
+            default => [
+                'dashboard.view',
+                'profile.edit',
+            ],
+        };
     }
 }

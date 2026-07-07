@@ -16,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
         $this->commands([
             SimulateSalePrint::class,
             SimulateAllFeatures::class,
+            \App\Console\Commands\FindDuplicateUserNames::class,
         ]);
     }
 

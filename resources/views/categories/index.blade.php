@@ -2,41 +2,76 @@
 @section('title', 'Kategori')
 
 @section('content')
-<div class="card shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <form class="d-flex gap-2" method="GET" id="category-search-form">
-            <div class="position-relative">
-                <input type="text" name="search" id="category-search-input" class="form-control" placeholder="Cari kategori..." value="{{ request('search') }}" autocomplete="off">
-                <div id="category-search-suggestions" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1000; top: 100%;"></div>
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 1rem;">
+            <div style="flex-grow: 1; min-width: 250px;">
+                <form class="d-flex gap-2" method="GET" id="category-search-form">
+                    <input type="text" name="search" id="category-search-input" class="form-control" placeholder="🔍 Cari kategori..." value="{{ request('search') }}" autocomplete="off">
+                    <button class="btn btn-outline-secondary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
             </div>
-            <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
-        </form>
-        <a href="{{ route('categories.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Tambah Kategori</a>
+            <a href="{{ route('categories.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Tambah Kategori
+            </a>
+        </div>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead><tr><th>Nama</th><th>Deskripsi</th><th class="text-end">Jumlah Barang</th><th></th></tr></thead>
+
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Nama Kategori</th>
+                    <th>Deskripsi</th>
+                    <th class="text-end">Jumlah Barang</th>
+                    <th class="text-end">Aksi</th>
+                </tr>
+            </thead>
             <tbody>
                 @forelse($categories as $cat)
                     <tr>
-                        <td>{{ $cat->name }}</td>
-                        <td>{{ $cat->description }}</td>
-                        <td class="text-end">{{ $cat->items_count }}</td>
+                        <td>
+                            <strong style="color: var(--primary);">{{ $cat->name }}</strong>
+                        </td>
+                        <td>
+                            <p class="mb-0" style="color: var(--gray-700); max-width: 300px;">{{ $cat->description ?: '-' }}</p>
+                        </td>
                         <td class="text-end">
-                            <a href="{{ route('categories.edit', $cat) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
-                            <form action="{{ route('categories.destroy', $cat) }}" method="POST" class="d-inline" data-confirm="Hapus kategori ini?">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                            </form>
+                            <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                                {{ $cat->items_count }} barang
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ route('categories.edit', $cat) }}" class="btn btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="{{ route('categories.destroy', $cat) }}" method="POST" class="d-inline" data-confirm="Yakin hapus kategori ini?">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-outline-danger btn-sm" title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="text-center text-muted py-4">Belum ada kategori</td></tr>
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 2.5rem; color: var(--gray-300); display: block; margin-bottom: 1rem;"></i>
+                            <div style="color: var(--gray-500); font-size: 1.1rem;">Belum ada kategori</div>
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="card-footer bg-white">{{ $categories->links() }}</div>
+
+    <div class="card-footer bg-white">
+        {{ $categories->links() }}
+    </div>
 </div>
 
 <script>

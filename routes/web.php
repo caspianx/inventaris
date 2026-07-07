@@ -98,6 +98,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/store-settings', [StoreSettingController::class, 'update'])
         ->name('store-settings.update')
         ->middleware('permission:store_settings.manage');
+    Route::post('/store-settings/test-cash-drawer', [StoreSettingController::class, 'testCashDrawer'])
+        ->name('store-settings.test-cash-drawer')
+        ->middleware('permission:store_settings.manage');
     Route::post('/store-settings/simulate-print', [StoreSettingController::class, 'simulatePrint'])
         ->name('store-settings.simulate-print')
         ->middleware('permission:store_settings.manage');
@@ -134,9 +137,28 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
     });
 
+    // Make name-availability check available to any authenticated user, with throttling
+    Route::get('/users/check-name', [UserController::class, 'checkName'])
+        ->name('users.check-name')
+        ->middleware(['auth', 'throttle:10,1']);
+
+    // User profile (per-user settings)
+    Route::middleware('permission:profile.edit')->group(function () {
+        Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])
+            ->name('profile.edit');
+        Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])
+            ->name('profile.update');
+        Route::post('/profile/test-cash-drawer', [App\Http\Controllers\ProfileController::class, 'testCashDrawer'])
+            ->name('profile.test-cash-drawer');
+    });
+
     Route::middleware('role:admin')->group(function () {
         Route::get('/role-permissions', [RolePermissionController::class, 'edit'])->name('role-permissions.edit');
         Route::put('/role-permissions', [RolePermissionController::class, 'update'])->name('role-permissions.update');
+        // Role preset management
+        Route::post('/role-presets', [\App\Http\Controllers\RolePresetController::class, 'store'])
+            ->name('role-presets.store')
+            ->middleware('permission:role_permissions.manage');
         Route::resource('roles', RoleController::class)->except(['show']);
     });
 

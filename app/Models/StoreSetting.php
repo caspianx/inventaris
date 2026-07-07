@@ -40,6 +40,8 @@ class StoreSetting extends Model
         'receipt_show_item_subtotal',
         'receipt_thank_you_text',
         'receipt_footer_note',
+        'cash_drawer_driver',
+        'cash_drawer_address',
     ];
 
     public static function current(): self
@@ -73,6 +75,8 @@ class StoreSetting extends Model
             'receipt_show_item_subtotal' => true,
             'receipt_thank_you_text' => 'Terima kasih atas kunjungan Anda!',
             'receipt_footer_note' => null,
+            'cash_drawer_driver' => 'network',
+            'cash_drawer_address' => null,
         ]);
     }
 }
