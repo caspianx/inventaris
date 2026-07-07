@@ -9,7 +9,7 @@ REM Double-click untuk menjalankan
 setlocal enabledelayedexpansion
 
 REM Tentukan path aplikasi (sesuaikan jika berbeda)
-set APP_PATH=C:\xampp\htdocs\inventaris
+set APP_PATH=C:\xampp\htdocs\123\inventory-app-laravel\inventory-app
 
 REM Check apakah folder aplikasi ada
 if not exist "%APP_PATH%" (
