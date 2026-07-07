@@ -117,7 +117,7 @@ class ItemController extends Controller
 
     public function index(Request $request)
     {
-        $allowedPerPage = [5, 10, 50, 100];
+        $allowedPerPage = [10, 25, 50, 100];
         $perPage = (int) $request->input('per_page', 10);
 
         if (! in_array($perPage, $allowedPerPage, true)) {
