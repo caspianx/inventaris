@@ -1,6 +1,6 @@
 # Spesifikasi Minimal - Inventory App Laravel
 
-Dokumentasi persyaratan minimum untuk menjalankan aplikasi Inventory Management System berbasis Laravel.
+Dokumentasi persyaratan minimum untuk menjalankan aplikasi Inventory Management System berbasis Laravel 12.
 
 ---
 
@@ -15,7 +15,8 @@ Dokumentasi persyaratan minimum untuk menjalankan aplikasi Inventory Management 
 ## 💻 Persyaratan Server
 
 ### PHP
-- **Versi Minimum**: PHP 8.3 atau lebih baru
+- **Versi Minimum**: PHP 8.2 atau lebih baru (tested dengan PHP 8.2 & 8.3)
+- **Recommended**: PHP 8.3+
 - **Extensions yang Diperlukan**:
   - `bcmath`
   - `ctype`
@@ -56,7 +57,7 @@ Dokumentasi persyaratan minimum untuk menjalankan aplikasi Inventory Management 
 ### Windows Users (Recommended Stack)
 1. **XAMPP** (Apache + PHP + MySQL)
    - Download: https://www.apachefriends.org/
-   - Pilih versi dengan PHP 8.3+
+   - Pilih versi dengan PHP 8.2 atau lebih baru
 
 2. **Visual Studio Code**
    - Download: https://code.visualstudio.com/
@@ -69,8 +70,8 @@ brew install php node composer
 
 # Ubuntu/Debian
 sudo apt update
-sudo apt install php8.3 php8.3-cli php8.3-mysql php8.3-sqlite3 \
-  php8.3-bcmath php8.3-curl php8.3-mbstring php8.3-xml \
+sudo apt install php8.2 php8.2-cli php8.2-mysql php8.2-sqlite3 \
+  php8.2-bcmath php8.2-curl php8.2-mbstring php8.2-xml \
   nodejs npm composer git
 ```
 
@@ -81,7 +82,7 @@ sudo apt install php8.3 php8.3-cli php8.3-mysql php8.3-sqlite3 \
 ### Backend (PHP/Laravel)
 | Package | Versi | Kegunaan |
 |---------|-------|----------|
-| Laravel Framework | ^13.8 | Framework utama |
+| Laravel Framework | ^12.8 | Framework utama |
 | Laravel Tinker | ^3.0 | Interactive shell |
 | PHPOffice/PHPSpreadsheet | ^5.8 | Export Excel (opsional) |
 
@@ -221,14 +222,14 @@ php artisan view:cache
 
 ## 🆘 Troubleshooting
 
-### Error: "PHP version must be ^8.3"
+### Error: "PHP version must be ^8.2"
 ```bash
 # Check PHP version
 php -v
 
-# Update PHP ke versi 8.3+
+# Update PHP ke versi 8.2+
 # XAMPP: Update atau gunakan versi terbaru
-# Linux: sudo apt install php8.3
+# Linux: sudo apt install php8.2
 ```
 
 ### Error: "Module not found (Node.js)"
@@ -257,7 +258,7 @@ chmod -R 755 storage bootstrap/cache
 
 ## 📞 Support & Documentation
 
-- **Laravel Docs**: https://laravel.com/docs/13.x
+- **Laravel Docs**: https://laravel.com/docs/12.x
 - **GitHub Repository**: https://github.com/caspianx/inventaris
 - **Report Issues**: https://github.com/caspianx/inventaris/issues
 
@@ -269,5 +270,5 @@ MIT License - Silakan gunakan untuk keperluan komersial maupun non-komersial.
 
 ---
 
-**Last Updated**: 2026-07-07
-**Version**: Laravel 13.8 + PHP 8.3+
+**Last Updated**: 2026-07-08
+**Version**: Laravel 12 + PHP 8.2+

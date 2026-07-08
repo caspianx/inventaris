@@ -37,7 +37,7 @@ Jika Anda pakai Windows, ini cara yang paling mudah! Kami akan menggunakan XAMPP
 1. **Buka browser** (Chrome, Firefox, Edge, dll)
 2. **Kunjungi:** https://www.apachefriends.org/
 3. **Anda akan melihat tombol download**, pilih yang **Windows** (bukan Mac atau Linux)
-4. Cari yang versi **8.3** atau lebih besar di bagian PHP
+4. Cari yang versi **8.2 atau lebih besar** di bagian PHP
 5. Klik tombol **"Download"** dan tunggu file selesai diunduh (sekitar 300 MB, 5-10 menit tergantung internet)
 
 ✅ **Selesai! File biasanya tersimpan di folder "Downloads"**
@@ -53,7 +53,7 @@ Jika Anda pakai Windows, ini cara yang paling mudah! Kami akan menggunakan XAMPP
 5. Saat diminta memilih komponen, pastikan yang di-centang:
    - ✅ Apache
    - ✅ MySQL
-   - ✅ PHP
+   - ✅ PHP (versi 8.2 atau lebih baru)
    - ✅ PhpMyAdmin (opsional tapi berguna)
 6. Terus klik **"Next"** hingga ada tombol **"Finish"**, lalu klik **"Finish"**
 
@@ -155,7 +155,7 @@ Sekarang kita akan mengatur aplikasi agar siap digunakan.
    ```
    cd C:\xampp\htdocs\inventaris
    ```
-   (Jika folder nama berbeda, sesuaikan namanya)
+   (Jika folder nama berbeda, composen namanya)
 
 3. **Ketik perintah ini dan tekan Enter:**
    ```
@@ -393,14 +393,14 @@ Buka browser: **http://localhost:8000**
 
 ### Troubleshooting (Kalau Ada Masalah)
 
-#### ❌ Error: "PHP version must be 8.3"
+#### ❌ Error: "PHP version must be 8.2"
 
 **Artinya:** PHP yang terinstall versinya kurang baru
 
 **Cara Perbaiki:**
-- Windows: Download XAMPP versi terbaru dan reinstall
-- Linux: `sudo apt install php8.3`
-- Mac: `brew install shivammathur/php/php@8.3`
+- Windows: Download XAMPP dengan PHP 8.2+ dan reinstall
+- Linux: `sudo apt install php8.2`
+- Mac: `brew install shivammathur/php/php@8.2`
 
 ---
 

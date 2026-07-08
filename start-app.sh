@@ -53,7 +53,7 @@ if [ $? -ne 0 ]; then
     echo ""
     echo -e "${RED}ERROR: Gagal menjalankan aplikasi!${NC}"
     echo "Pastikan:"
-    echo "1. PHP 8.3+ sudah terinstall"
+    echo "1. PHP 8.2+ sudah terinstall"
     echo "2. Composer sudah terinstall"
     echo "3. Dependencies sudah diinstall (jalankan: composer install)"
     echo ""
