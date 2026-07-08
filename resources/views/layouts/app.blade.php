@@ -557,20 +557,79 @@
             font-size: 0.9rem;
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                left: -300px;
-                top: 0;
-                width: 300px;
-                height: 100vh;
-                z-index: 1000;
-                transition: left 0.3s ease;
+        /* MOBILE MENU TOGGLE */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+            padding: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-menu-toggle:hover {
+            color: var(--primary);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* RESPONSIVE - TABLET (992px and down) */
+        @media (max-width: 991px) {
+            nav.sidebar {
+                width: 260px;
             }
 
-            .sidebar.show {
+            main.main-content {
+                padding: 1.5rem;
+            }
+
+            .topbar {
+                padding: 0.75rem 1.5rem;
+            }
+
+            .topbar h4 {
+                font-size: 1.35rem;
+            }
+        }
+
+        /* RESPONSIVE - MOBILE (768px and down) */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            nav.sidebar {
+                position: fixed;
                 left: 0;
+                top: 0;
+                width: 280px;
+                height: 100vh;
+                z-index: 1001;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+                overflow-y: auto;
+            }
+
+            nav.sidebar.show {
+                transform: translateX(0);
             }
 
             .main-wrapper {
@@ -579,23 +638,459 @@
 
             main.main-content {
                 padding: 1rem;
+                max-width: 100%;
             }
 
             .topbar {
-                padding: 1rem;
+                padding: 0.75rem 1rem;
+                gap: 0.5rem;
+                flex-wrap: wrap;
             }
 
             .topbar h4 {
-                font-size: 1.25rem;
+                font-size: 1.1rem;
+                margin: 0;
+            }
+
+            .topbar h4 i {
+                font-size: 1.35rem;
             }
 
             .profile-info {
                 display: none;
             }
+
+            .profile-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .card {
+                border-radius: 8px;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            .card-header {
+                padding: 1rem;
+                font-size: 0.95rem;
+            }
+
+            .btn {
+                padding: 0.55rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .btn-sm {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.8rem;
+            }
+
+            /* Forms on mobile */
+            .form-control, .form-select {
+                padding: 0.7rem 0.875rem;
+                font-size: 0.9rem;
+            }
+
+            .form-label {
+                font-size: 0.9rem;
+                margin-bottom: 0.4rem;
+            }
+
+            .input-group {
+                flex-wrap: wrap;
+            }
+
+            /* Tables responsive */
+            .table-responsive {
+                margin: -1rem -1rem 0 -1rem;
+            }
+
+            .table {
+                font-size: 0.85rem;
+            }
+
+            .table th {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .table code {
+                font-size: 0.75rem !important;
+            }
+
+            /* Dashboard stats - stack on mobile */
+            .row.g-4 {
+                gap: 1rem !important;
+            }
+
+            /* Alert and badges */
+            .alert {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+                gap: 0.5rem;
+            }
+
+            .alert i {
+                font-size: 1rem;
+            }
+
+            .badge {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            /* Dropdown menu */
+            .dropdown-menu {
+                min-width: 220px;
+                max-width: 85vw;
+            }
+
+            .dropdown-item {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .dropdown-header {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            /* Modals */
+            .modal-dialog {
+                margin: 0.5rem auto;
+            }
+
+            .modal-content {
+                border-radius: 8px;
+            }
+
+            .modal-header {
+                padding: 1rem;
+            }
+
+            .modal-body {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .modal-footer {
+                padding: 1rem;
+            }
+
+            /* Flex direction on mobile */
+            .d-flex {
+                flex-direction: column;
+            }
+
+            .d-flex.gap-2, .d-flex.gap-3, .d-flex.gap-4 {
+                gap: 0.5rem !important;
+            }
+
+            /* Adjust button widths */
+            a.btn, button.btn {
+                min-width: auto;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            /* Text adjustments */
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.35rem; }
+            h3 { font-size: 1.2rem; }
+            h4 { font-size: 1.1rem; }
+            h5 { font-size: 1rem; }
+            h6 { font-size: 0.95rem; }
+
+            /* Sidebar menu text visibility */
+            .sidebar a span {
+                display: inline;
+            }
+
+            /* Card stat adjustments */
+            .card-stat {
+                border-radius: 8px;
+            }
+
+            /* Profile section in mobile */
+            .profile-avatar-btn {
+                gap: 0.5rem;
+            }
+
+            /* Form filters mobile */
+            .card-header > form {
+                flex-direction: column;
+            }
+
+            .card-header > form > div {
+                flex-direction: column;
+                width: 100% !important;
+            }
+
+            .card-header > form > div > input,
+            .card-header > form > div > select,
+            .card-header > form > div > button,
+            .card-header > form > div > a {
+                width: 100%;
+            }
+
+            .form-check {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .form-check-label {
+                white-space: nowrap;
+            }
+
+            /* Position relative adjustments for mobile */
+            .position-relative {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+
+            .position-relative + select,
+            .position-relative + button,
+            .position-relative + a {
+                width: 100%;
+            }
+
+            /* Button groups mobile friendly */
+            .btn-group-sm > .btn {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            /* Allow wrapping of flex items in cards */
+            div.d-flex[style*="justify-content: space-between"] {
+                flex-wrap: wrap;
+            }
+
+            /* Make action buttons stack vertically on mobile */
+            .btn-group.btn-group-sm {
+                display: flex !important;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .btn-group.btn-group-sm > .btn {
+                flex: 0 1 auto;
+                width: auto;
+                padding: 0.3rem 0.5rem;
+            }
+
+            /* Improve select dropdowns */
+            select.form-select {
+                width: 100%;
+            }
+
+            /* Input group mobile */
+            .input-group {
+                width: 100%;
+            }
+
+            .input-group > input,
+            .input-group > select {
+                min-width: 0;
+            }
+
+            /* Card footer mobile */
+            .card-footer {
+                padding: 0.75rem !important;
+            }
+
+            .card-footer .d-flex {
+                flex-direction: column !important;
+            }
+
+            /* Pagination links mobile */
+            nav[role="navigation"] {
+                overflow-x: auto;
+            }
+
+            /* Improve text display in cells */
+            td strong {
+                display: block;
+                word-wrap: break-word;
+                word-break: break-word;
+            }
+
+            td small {
+                display: block;
+            }
+
+            /* Make badges wrap properly */
+            .badge {
+                display: inline-block;
+                word-wrap: break-word;
+            }
+        }
+
+        /* EXTRA SMALL (576px and down) */
+        @media (max-width: 576px) {
+            nav.sidebar {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .topbar {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .topbar h4 {
+                font-size: 1rem;
+                font-weight: 600;
+            }
+
+            .topbar h4 i {
+                font-size: 1.2rem;
+            }
+
+            main.main-content {
+                padding: 0.75rem;
+            }
+
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .card-body {
+                padding: 0.75rem;
+            }
+
+            .card-header {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+                border-radius: 6px 6px 0 0;
+            }
+
+            .btn {
+                padding: 0.5rem 0.875rem;
+                font-size: 0.8rem;
+                width: 100%;
+                white-space: nowrap;
+            }
+
+            .btn-group {
+                gap: 0.25rem;
+            }
+
+            /* Grid adjustments for very small screens */
+            .col-md-3, .col-md-6, .col-lg-6 {
+                min-width: 100% !important;
+            }
+
+            .form-control, .form-select {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .table {
+                font-size: 0.8rem;
+            }
+
+            .table th {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.75rem;
+            }
+
+            .table td {
+                padding: 0.5rem 0.25rem;
+            }
+
+            /* Icons smaller on very small screens */
+            i.bi {
+                font-size: 0.95rem;
+            }
+
+            .sidebar a i {
+                min-width: 16px;
+                font-size: 0.95rem;
+            }
+
+            .alert {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+                gap: 0.25rem;
+            }
+
+            .alert i {
+                font-size: 0.9rem;
+            }
+
+            .badge {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.7rem;
+            }
+
+            h1 { font-size: 1.35rem; }
+            h2 { font-size: 1.2rem; }
+            h3 { font-size: 1.1rem; }
+            h4 { font-size: 1rem; }
+            h5 { font-size: 0.95rem; }
+            h6 { font-size: 0.9rem; }
+
+            /* Hide less important info on extra small screens */
+            .text-muted.small {
+                font-size: 0.8rem;
+            }
+
+            /* Adjust dropdown */
+            .dropdown-menu {
+                min-width: 200px;
+                max-width: 90vw;
+            }
+
+            /* Responsive flex for dashboard items */
+            div[style*="padding: 1.25rem; border-bottom"] {
+                flex-wrap: wrap;
+                padding: 0.75rem !important;
+            }
+
+            div[style*="padding: 1.25rem; border-bottom"] > div {
+                margin-bottom: 0.5rem;
+            }
+
+            div[style*="padding: 1.25rem; border-bottom"] a.btn {
+                width: auto;
+            }
+
+            /* Make inline stat items responsive */
+            .d-flex.justify-content-between.align-items-start {
+                flex-wrap: wrap;
+            }
+
+            /* Card stat responsive */
+            .card-stat {
+                border-radius: 8px;
+            }
+
+            /* Adjust inline width styles for mobile */
+            div[style*="width: 50px"] {
+                width: 40px !important;
+                height: 40px !important;
+            }
+
+            div[style*="width: 50px"] i {
+                font-size: 1.2rem !important;
+            }
         }
     </style>
 </head>
 <body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="main-wrapper">
     <!-- SIDEBAR MODERN -->
     <nav class="sidebar p-3" style="width: 280px; flex-shrink: 0;">
@@ -718,37 +1213,42 @@
     <div style="flex-grow: 1; display: flex; flex-direction: column;">
         <!-- TOPBAR -->
         <div class="topbar">
-            <h4>
-                @if(request()->routeIs('dashboard'))
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                @elseif(request()->routeIs('items.*'))
-                    <i class="bi bi-box-seam"></i> Master Barang
-                @elseif(request()->routeIs('categories.*'))
-                    <i class="bi bi-tag"></i> Kategori
-                @elseif(request()->routeIs('suppliers.*'))
-                    <i class="bi bi-truck"></i> Supplier
-                @elseif(request()->routeIs('sales.*'))
-                    <i class="bi bi-cash-coin"></i> Kasir/Penjualan
-                @elseif(request()->routeIs('stock-movements.*'))
-                    <i class="bi bi-arrow-left-right"></i> Stok Masuk/Keluar
-                @elseif(request()->routeIs('purchase-orders.*'))
-                    <i class="bi bi-clipboard-check"></i> Purchase Order
-                @elseif(request()->routeIs('print-files.*'))
-                    <i class="bi bi-printer"></i> Cetak Struk
-                @elseif(request()->routeIs('reports.*'))
-                    <i class="bi bi-file-earmark-chart"></i> Laporan
-                @elseif(request()->routeIs('store-settings.*'))
-                    <i class="bi bi-gear"></i> Pengaturan Toko
-                @elseif(request()->routeIs('users.*'))
-                    <i class="bi bi-people-fill"></i> Manajemen User
-                @elseif(request()->routeIs('role-permissions.*'))
-                    <i class="bi bi-shield-lock"></i> Akses Role
-                @elseif(request()->routeIs('activity-logs.*'))
-                    <i class="bi bi-journal-text"></i> Riwayat Audit
-                @else
-                    @yield('title', 'Dashboard')
-                @endif
-            </h4>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" title="Buka Menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h4>
+                    @if(request()->routeIs('dashboard'))
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    @elseif(request()->routeIs('items.*'))
+                        <i class="bi bi-box-seam"></i> Master Barang
+                    @elseif(request()->routeIs('categories.*'))
+                        <i class="bi bi-tag"></i> Kategori
+                    @elseif(request()->routeIs('suppliers.*'))
+                        <i class="bi bi-truck"></i> Supplier
+                    @elseif(request()->routeIs('sales.*'))
+                        <i class="bi bi-cash-coin"></i> Kasir/Penjualan
+                    @elseif(request()->routeIs('stock-movements.*'))
+                        <i class="bi bi-arrow-left-right"></i> Stok Masuk/Keluar
+                    @elseif(request()->routeIs('purchase-orders.*'))
+                        <i class="bi bi-clipboard-check"></i> Purchase Order
+                    @elseif(request()->routeIs('print-files.*'))
+                        <i class="bi bi-printer"></i> Cetak Struk
+                    @elseif(request()->routeIs('reports.*'))
+                        <i class="bi bi-file-earmark-chart"></i> Laporan
+                    @elseif(request()->routeIs('store-settings.*'))
+                        <i class="bi bi-gear"></i> Pengaturan Toko
+                    @elseif(request()->routeIs('users.*'))
+                        <i class="bi bi-people-fill"></i> Manajemen User
+                    @elseif(request()->routeIs('role-permissions.*'))
+                        <i class="bi bi-shield-lock"></i> Akses Role
+                    @elseif(request()->routeIs('activity-logs.*'))
+                        <i class="bi bi-journal-text"></i> Riwayat Audit
+                    @else
+                        @yield('title', 'Dashboard')
+                    @endif
+                </h4>
+            </div>
             
             <!-- USER PROFILE DROPDOWN -->
             <div class="dropdown">
@@ -854,6 +1354,54 @@
 </div>
 
 <script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function () {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const sidebar = document.querySelector('nav.sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    function closeSidebar() {
+        sidebar.classList.remove('show');
+        sidebarOverlay.classList.remove('show');
+    }
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('show');
+        sidebarOverlay.classList.toggle('show');
+    }
+
+    // Toggle menu button
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleSidebar();
+        });
+    }
+
+    // Close sidebar when clicking on overlay
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    // Close sidebar when clicking on sidebar links
+    const sidebarLinks = sidebar.querySelectorAll('a');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function () {
+            // Close sidebar after navigation on mobile
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+
+    // Close sidebar when window is resized to desktop size
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 768) {
+            closeSidebar();
+        }
+    });
+});
+
 // Ganti popup confirm() bawaan browser dengan modal modern.
 // Pakai: <form data-confirm="Pesan konfirmasi di sini..."> alih-alih onsubmit="return confirm(...)"
 document.addEventListener('DOMContentLoaded', function () {
