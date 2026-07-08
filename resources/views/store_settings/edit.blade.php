@@ -41,11 +41,16 @@
 
                     <div class="col-md-5">
                         <div class="border rounded p-3 bg-light">
-                            <div class="text-muted small mb-2">Preview Logo Toko</div>
-                            @if($storeSetting->logo_path)
-                                <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo" class="img-fluid" style="max-width: 200px;">
+                            <div class="text-muted small mb-2">Preview Struk</div>
+                            @if(isset($receiptPreviewBase64))
+                                <iframe src="data:text/html;base64,{{ $receiptPreviewBase64 }}" style="width:100%; border:1px solid #ddd; height:560px;" title="Preview Struk"></iframe>
                             @else
-                                <p class="text-muted mb-0">Belum ada logo</p>
+                                <div class="text-muted small mb-2">Preview Logo Toko</div>
+                                @if($storeSetting->logo_path)
+                                    <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo" class="img-fluid" style="max-width: 200px;">
+                                @else
+                                    <p class="text-muted mb-0">Belum ada logo</p>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -129,6 +134,12 @@
                                 <input type="checkbox" name="show_receipt_logo" value="1" class="form-check-input" id="showReceiptLogo" {{ old('show_receipt_logo', $storeSetting->show_receipt_logo) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="showReceiptLogo">Tampilkan logo pada struk</label>
                             </div>
+
+                            <input type="hidden" name="name" value="{{ old('name', $storeSetting->name) }}">
+                            <input type="hidden" name="address" value="{{ old('address', $storeSetting->address) }}">
+
+                            <input type="hidden" name="name" value="{{ old('name', $storeSetting->name) }}">
+                            <input type="hidden" name="address" value="{{ old('address', $storeSetting->address) }}">
 
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
                         </form>
@@ -335,6 +346,9 @@
                                 <input type="text" name="cash_drawer_address" class="form-control" value="{{ old('cash_drawer_address', $storeSetting->cash_drawer_address) }}" placeholder="Alamat perangkat (mis. http://192.168.1.100/open)">
                                 <div class="form-text">Network: masukkan URL. Printer: masukkan path ke device/printer share.</div>
                             </div>
+
+                            <input type="hidden" name="name" value="{{ old('name', $storeSetting->name) }}">
+                            <input type="hidden" name="address" value="{{ old('address', $storeSetting->address) }}">
 
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
                         </form>

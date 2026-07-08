@@ -21,7 +21,40 @@ class StoreSettingController extends Controller
         $printerOptions = $this->getAvailablePrinters();
         $hasCashDrawer = Auth::user()?->has_cash_drawer ?? false;
 
-        return view('store_settings.edit', compact('storeSetting', 'printerOptions', 'hasCashDrawer'));
+        // Prepare a preview sale object for rendering receipt preview
+        $previewSale = new \stdClass();
+        $previewSale->invoice_number = 'PREVIEW-'.now()->format('YmdHis');
+        $previewSale->created_at = now();
+        $previewSale->user = (object) ['name' => Auth::user()?->name ?? 'Kasir'];
+        $sampleItem = (object) [
+            'item_name' => 'Contoh Produk',
+            'item_sku' => 'BRG-0001',
+            'quantity' => 2,
+            'price' => 15000,
+            'subtotal' => 30000,
+        ];
+        $previewSale->items = collect([$sampleItem]);
+        $previewSale->subtotal = 30000;
+        $previewSale->discount = 0;
+        $previewSale->total = 30000;
+        $previewSale->payment_method = 'cash';
+        $previewSale->paid_amount = 50000;
+        $previewSale->change_amount = 20000;
+        $previewSale->notes = 'Tabel 1';
+
+        // Prepare logo data URI if available for inline preview
+        $logoDataUri = null;
+        if (! empty($storeSetting->logo_path) && file_exists(public_path($storeSetting->logo_path))) {
+            $path = public_path($storeSetting->logo_path);
+            $mime = function_exists('mime_content_type') ? mime_content_type($path) : 'image/png';
+            $logoDataUri = 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
+        }
+
+        // Render the sales.receipt view as HTML and base64 encode for iframe src
+        $receiptHtml = view('sales.receipt', ['sale' => $previewSale, 'storeSetting' => $storeSetting, 'logoDataUri' => $logoDataUri])->render();
+        $receiptPreviewBase64 = base64_encode($receiptHtml);
+
+        return view('store_settings.edit', compact('storeSetting', 'printerOptions', 'hasCashDrawer', 'receiptPreviewBase64'));
     }
 
     protected function getAvailablePrinters(): array
@@ -63,7 +96,9 @@ class StoreSettingController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            // allow subforms to omit `name` (they include hidden inputs, but
+            // tolerate missing value) and fallback to existing store name
+            'name' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'remove_logo' => ['nullable', 'boolean'],
@@ -100,8 +135,8 @@ class StoreSettingController extends Controller
         $storeSetting = StoreSetting::current();
 
         $data = [
-            'name' => $validated['name'],
-            'address' => $validated['address'] ?? null,
+            'name' => $validated['name'] ?? $storeSetting->name,
+            'address' => $validated['address'] ?? $storeSetting->address,
         ];
 
         // Print settings
