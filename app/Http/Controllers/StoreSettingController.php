@@ -134,42 +134,105 @@ class StoreSettingController extends Controller
 
         $storeSetting = StoreSetting::current();
 
-        $data = [
-            'name' => $validated['name'] ?? $storeSetting->name,
-            'address' => $validated['address'] ?? $storeSetting->address,
-        ];
+        // Only update fields that were present in the request. This avoids
+        // unintentionally overwriting unrelated settings when submitting
+        // subforms that only include a subset of fields.
+        $data = [];
 
-        // Print settings
-        $data['default_printer'] = $validated['default_printer'] ?? null;
-        $data['auto_print_receipt'] = $request->boolean('auto_print_receipt');
-        $data['receipt_copies'] = $validated['receipt_copies'] ?? 1;
-        $data['receipt_size'] = $validated['receipt_size'] ?? '80mm';
-        $data['show_receipt_logo'] = $request->boolean('show_receipt_logo');
-        $data['receipt_header_title'] = $validated['receipt_header_title'] ?? null;
-        $data['receipt_header_subtitle'] = $validated['receipt_header_subtitle'] ?? null;
-        $data['receipt_header_extra'] = $validated['receipt_header_extra'] ?? null;
-        $data['receipt_show_invoice_number'] = $request->boolean('receipt_show_invoice_number');
-        $data['receipt_show_date_time'] = $request->boolean('receipt_show_date_time');
-        $data['receipt_show_cashier'] = $request->boolean('receipt_show_cashier');
-        $data['receipt_cashier_label'] = $validated['receipt_cashier_label'] ?? 'Kasir';
-        $data['receipt_show_table'] = $request->boolean('receipt_show_table');
-        $data['receipt_table_label'] = $validated['receipt_table_label'] ?? 'Tabel';
-        $data['receipt_show_tax_line'] = $request->boolean('receipt_show_tax_line');
-        $data['receipt_tax_label'] = $validated['receipt_tax_label'] ?? 'Pajak';
-        $data['receipt_tax_rate'] = $validated['receipt_tax_rate'] ?? 0;
-        $data['receipt_show_payment_method'] = $request->boolean('receipt_show_payment_method');
-        $data['receipt_payment_label'] = $validated['receipt_payment_label'] ?? 'Bayar';
-        $data['receipt_change_label'] = $validated['receipt_change_label'] ?? 'Kembalian';
-        $data['receipt_show_item_sku'] = $request->boolean('receipt_show_item_sku');
-        $data['receipt_show_item_quantity'] = $request->boolean('receipt_show_item_quantity');
-        $data['receipt_show_item_price'] = $request->boolean('receipt_show_item_price');
-        $data['receipt_show_item_subtotal'] = $request->boolean('receipt_show_item_subtotal');
-        $data['receipt_thank_you_text'] = $validated['receipt_thank_you_text'] ?? 'Terima kasih atas kunjungan Anda!';
-        $data['receipt_footer_note'] = $validated['receipt_footer_note'] ?? null;
+        if ($request->has('name')) {
+            $data['name'] = $validated['name'] ?? $storeSetting->name;
+        }
+        if ($request->has('address')) {
+            $data['address'] = $validated['address'] ?? $storeSetting->address;
+        }
+
+        // Print settings (only set when present in request)
+        if ($request->has('default_printer')) {
+            $data['default_printer'] = $validated['default_printer'] ?? null;
+        }
+        if ($request->has('auto_print_receipt')) {
+            $data['auto_print_receipt'] = $request->boolean('auto_print_receipt');
+        }
+        if ($request->has('receipt_copies')) {
+            $data['receipt_copies'] = $validated['receipt_copies'] ?? $storeSetting->receipt_copies ?? 1;
+        }
+        if ($request->has('receipt_size')) {
+            $data['receipt_size'] = $validated['receipt_size'] ?? $storeSetting->receipt_size ?? '80mm';
+        }
+        if ($request->has('show_receipt_logo')) {
+            $data['show_receipt_logo'] = $request->boolean('show_receipt_logo');
+        }
+        if ($request->has('receipt_header_title')) {
+            $data['receipt_header_title'] = $validated['receipt_header_title'] ?? null;
+        }
+        if ($request->has('receipt_header_subtitle')) {
+            $data['receipt_header_subtitle'] = $validated['receipt_header_subtitle'] ?? null;
+        }
+        if ($request->has('receipt_header_extra')) {
+            $data['receipt_header_extra'] = $validated['receipt_header_extra'] ?? null;
+        }
+        if ($request->has('receipt_show_invoice_number')) {
+            $data['receipt_show_invoice_number'] = $request->boolean('receipt_show_invoice_number');
+        }
+        if ($request->has('receipt_show_date_time')) {
+            $data['receipt_show_date_time'] = $request->boolean('receipt_show_date_time');
+        }
+        if ($request->has('receipt_show_cashier')) {
+            $data['receipt_show_cashier'] = $request->boolean('receipt_show_cashier');
+        }
+        if ($request->has('receipt_cashier_label')) {
+            $data['receipt_cashier_label'] = $validated['receipt_cashier_label'] ?? $storeSetting->receipt_cashier_label ?? 'Kasir';
+        }
+        if ($request->has('receipt_show_table')) {
+            $data['receipt_show_table'] = $request->boolean('receipt_show_table');
+        }
+        if ($request->has('receipt_table_label')) {
+            $data['receipt_table_label'] = $validated['receipt_table_label'] ?? $storeSetting->receipt_table_label ?? 'Tabel';
+        }
+        if ($request->has('receipt_show_tax_line')) {
+            $data['receipt_show_tax_line'] = $request->boolean('receipt_show_tax_line');
+        }
+        if ($request->has('receipt_tax_label')) {
+            $data['receipt_tax_label'] = $validated['receipt_tax_label'] ?? $storeSetting->receipt_tax_label ?? 'Pajak';
+        }
+        if ($request->has('receipt_tax_rate')) {
+            $data['receipt_tax_rate'] = $validated['receipt_tax_rate'] ?? $storeSetting->receipt_tax_rate ?? 0;
+        }
+        if ($request->has('receipt_show_payment_method')) {
+            $data['receipt_show_payment_method'] = $request->boolean('receipt_show_payment_method');
+        }
+        if ($request->has('receipt_payment_label')) {
+            $data['receipt_payment_label'] = $validated['receipt_payment_label'] ?? $storeSetting->receipt_payment_label ?? 'Bayar';
+        }
+        if ($request->has('receipt_change_label')) {
+            $data['receipt_change_label'] = $validated['receipt_change_label'] ?? $storeSetting->receipt_change_label ?? 'Kembalian';
+        }
+        if ($request->has('receipt_show_item_sku')) {
+            $data['receipt_show_item_sku'] = $request->boolean('receipt_show_item_sku');
+        }
+        if ($request->has('receipt_show_item_quantity')) {
+            $data['receipt_show_item_quantity'] = $request->boolean('receipt_show_item_quantity');
+        }
+        if ($request->has('receipt_show_item_price')) {
+            $data['receipt_show_item_price'] = $request->boolean('receipt_show_item_price');
+        }
+        if ($request->has('receipt_show_item_subtotal')) {
+            $data['receipt_show_item_subtotal'] = $request->boolean('receipt_show_item_subtotal');
+        }
+        if ($request->has('receipt_thank_you_text')) {
+            $data['receipt_thank_you_text'] = $validated['receipt_thank_you_text'] ?? $storeSetting->receipt_thank_you_text ?? 'Terima kasih atas kunjungan Anda!';
+        }
+        if ($request->has('receipt_footer_note')) {
+            $data['receipt_footer_note'] = $validated['receipt_footer_note'] ?? null;
+        }
 
         // Cash drawer settings
-        $data['cash_drawer_driver'] = $validated['cash_drawer_driver'] ?? 'network';
-        $data['cash_drawer_address'] = $validated['cash_drawer_address'] ?? null;
+        if ($request->has('cash_drawer_driver')) {
+            $data['cash_drawer_driver'] = $validated['cash_drawer_driver'] ?? $storeSetting->cash_drawer_driver ?? 'network';
+        }
+        if ($request->has('cash_drawer_address')) {
+            $data['cash_drawer_address'] = $validated['cash_drawer_address'] ?? $storeSetting->cash_drawer_address ?? null;
+        }
 
         if ($request->boolean('remove_logo') && $storeSetting->logo_path) {
             File::delete(public_path($storeSetting->logo_path));

@@ -19,18 +19,19 @@
             margin: 0 auto;
             padding: 12px;
             color: #000;
+            line-height: 1.25;
         }
         .center { text-align: center; }
-        .line { border-top: 1px dashed #000; margin: 6px 0; }
+        .separator { border-top: 1px dashed #000; margin: 8px 0; }
         table { width: 100%; border-collapse: collapse; }
         td { padding: 2px 0; vertical-align: top; }
         .right { text-align: right; }
-        .item-name { font-weight: bold; }
-        .store-logo { max-width: 90px; max-height: 70px; object-fit: contain; margin-bottom: 4px; }
-        .toolbar { text-align: center; margin-bottom: 16px; }
+        .item-name { font-weight: bold; margin-bottom: 2px; }
+        .store-logo { max-width: 90px; max-height: 70px; object-fit: contain; margin-bottom: 6px; }
+        .toolbar { text-align: center; margin-bottom: 12px; }
         .toolbar button, .toolbar a {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 6px 12px;
             margin: 4px;
             text-decoration: none;
             border-radius: 6px;
@@ -38,9 +39,13 @@
             background: #fff;
             color: #333;
             font-family: Arial, sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
         }
+        .small { font-size: 11px; color: #222; }
+        .muted { color: #666; font-size: 11px; }
+        .totals td { padding: 4px 0; }
+        .item-table td { padding: 0; }
         @media print {
             .no-print { display: none !important; }
             body { width: auto; }
@@ -65,19 +70,18 @@
         @elseif(!empty($storeSetting->show_receipt_logo) && !empty($storeSetting->logo_path))
             <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo {{ $storeSetting->name }}" class="store-logo"><br>
         @endif
-        <strong>{{ strtoupper($storeSetting->receipt_header_title ?? $storeSetting->name ?? 'Inventory App') }}</strong><br>
+        <div class="small"><strong>{{ strtoupper($storeSetting->receipt_header_title ?? $storeSetting->name ?? 'Inventory App') }}</strong></div>
         @if(!empty($storeSetting->receipt_header_subtitle))
-            <span>{{ $storeSetting->receipt_header_subtitle }}</span><br>
+            <div class="small">{{ $storeSetting->receipt_header_subtitle }}</div>
         @endif
         @if(!empty($storeSetting->address))
-            {!! nl2br(e($storeSetting->address)) !!}<br>
+            <div class="small">{!! nl2br(e($storeSetting->address)) !!}</div>
         @endif
         @if(!empty($storeSetting->receipt_header_extra))
-            <span>{{ $storeSetting->receipt_header_extra }}</span><br>
+            <div class="small">{{ $storeSetting->receipt_header_extra }}</div>
         @endif
-        ------------------------
     </div>
-    <div class="line"></div>
+    <div class="separator"></div>
 
     <table>
         @if($storeSetting->receipt_show_invoice_number)
@@ -93,44 +97,36 @@
             <tr><td>{{ $storeSetting->receipt_table_label }}</td><td class="right">{{ $sale->notes }}</td></tr>
         @endif
     </table>
-    <div class="line"></div>
+    <div class="separator"></div>
 
     @foreach($sale->items as $item)
         @php
-            $itemLine = $item->item_name;
-            $details = [];
-            if ($storeSetting->receipt_show_item_quantity) {
-                $details[] = $item->quantity . 'x';
-            }
-            if ($storeSetting->receipt_show_item_price) {
-                $details[] = 'Rp ' . number_format($item->price, 0, ',', '.');
-            }
-            if ($storeSetting->receipt_show_item_subtotal) {
-                $details[] = 'Rp ' . number_format($item->subtotal, 0, ',', '.');
-            }
+            $qty = $item->quantity ?? 1;
+            $lineTotal = $item->subtotal ?? ($item->price * $qty);
         @endphp
-        <div class="item-name">{{ $itemLine }}</div>
-        <table>
+        <table class="item-table">
             <tr>
-                <td>{{ implode(' ', $details) }}</td>
+                <td style="width:60%"><div class="item-name">{{ $item->item_name }}</div></td>
+                <td style="width:15%" class="center small">x{{ $qty }}</td>
+                <td style="width:25%" class="right">Rp {{ number_format($lineTotal, 0, ',', '.') }}</td>
             </tr>
             @if($storeSetting->receipt_show_item_sku && $item->item_sku)
                 <tr>
-                    <td class="text-muted small">{{ $item->item_sku }}</td>
+                    <td colspan="3" class="muted small">{{ $item->item_sku }}</td>
                 </tr>
             @endif
         </table>
     @endforeach
 
-    <div class="line"></div>
-    <table>
-        <tr><td>Subtotal</td><td class="right">Rp {{ number_format($sale->subtotal, 0, ',', '.') }}</td></tr>
+    <div class="separator"></div>
+    <table class="totals">
+        <tr><td class="small">Subtotal</td><td class="right">Rp {{ number_format($sale->subtotal, 0, ',', '.') }}</td></tr>
         @if($sale->discount > 0)
-            <tr><td>Diskon</td><td class="right">- Rp {{ number_format($sale->discount, 0, ',', '.') }}</td></tr>
+            <tr><td class="small">Diskon</td><td class="right">- Rp {{ number_format($sale->discount, 0, ',', '.') }}</td></tr>
         @endif
         <tr><td><strong>TOTAL</strong></td><td class="right"><strong>Rp {{ number_format($sale->total, 0, ',', '.') }}</strong></td></tr>
     </table>
-    <div class="line"></div>
+    <div class="separator"></div>
 
     <table>
         <tr><td>Bayar ({{ strtoupper($sale->payment_method) }})</td><td class="right">Rp {{ number_format($sale->paid_amount, 0, ',', '.') }}</td></tr>
@@ -142,10 +138,10 @@
         <div>Catatan: {{ $sale->notes }}</div>
     @endif
 
-    <div class="line"></div>
-    <div class="center">
-        Terima kasih atas kunjungan Anda!<br>
-        Barang yang sudah dibeli tidak dapat dikembalikan.
+    <div class="separator"></div>
+    <div class="center small">
+        {{ $storeSetting->receipt_thank_you_text ?? 'Terima kasih atas kunjungan Anda!' }}<br>
+        <div class="muted">Barang yang sudah dibeli tidak dapat dikembalikan.</div>
     </div>
 
 </body>

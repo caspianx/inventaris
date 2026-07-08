@@ -1,12 +1,14 @@
 --- Struk Belanja (80MM) ---
+*** SIMULASI ***
+[Logo: store-logo-1783476158.png]
 apotik mumbang lonong
 Jln.Garuda Ujung No.EE 4
-Tanggal: 2026-07-07 07:26:30
-No. Nota: 47
+Tanggal: 2026-07-08 02:03:58
+No. Nota: 57
+Keterangan: Cetak simulasi
 ---------------------
-Baju21 x1  20.000
-Baju25 x1  20.000
+Baju1 x1  20.000
 ---------------------
-Total: 40.000
+Total: 20.000
 ---------------------
 Terima kasih

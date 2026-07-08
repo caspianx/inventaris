@@ -1,8 +1,8 @@
 --- Cash Drawer Simulation ---
-Timestamp: 2026-07-07 06:26:40
+Timestamp: 2026-07-07 09:04:57
 Status: success
 Driver: printer
-Address: C:\Users\indra.simamora\AppData\Local\Temp\casC9A1.tmp
+Address: C:\Users\indra.simamora\AppData\Local\Temp\casB54D.tmp
 Sale ID: 123
 Invoice: TEST-001
 Total: 15000

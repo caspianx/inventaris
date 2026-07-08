@@ -173,9 +173,20 @@ class SaleController extends Controller
     {
         $sale->load(['items', 'user']);
 
+        $store = StoreSetting::current();
+        $logoDataUri = null;
+        if (! empty($store->show_receipt_logo) && ! empty($store->logo_path)) {
+            $logoFile = public_path($store->logo_path);
+            if (file_exists($logoFile)) {
+                $mimeType = mime_content_type($logoFile) ?: 'image/png';
+                $data = base64_encode(file_get_contents($logoFile));
+                $logoDataUri = "data:$mimeType;base64,$data";
+            }
+        }
+
         return view('sales.receipt', [
             'sale' => $sale,
-            'logoDataUri' => null,
+            'logoDataUri' => $logoDataUri,
         ]);
     }
 }
