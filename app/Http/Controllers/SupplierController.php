@@ -92,6 +92,39 @@ class SupplierController extends Controller
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
     }
 
+    public function bulkDelete(Request $request)
+    {
+        $ids = array_filter(array_map('intval', (array) $request->input('selected_items', [])));
+
+        if (empty($ids)) {
+            return back()->with('error', 'Pilih minimal satu supplier untuk dihapus.');
+        }
+
+        $suppliers = Supplier::whereIn('id', $ids)->get();
+        $deletedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($suppliers as $supplier) {
+            if ($supplier->purchaseOrders()->exists()) {
+                $skippedCount++;
+                continue;
+            }
+
+            $supplier->delete();
+            $deletedCount++;
+        }
+
+        $message = 'Supplier berhasil dihapus.';
+
+        if ($deletedCount > 0 && $skippedCount > 0) {
+            $message = "Supplier yang aman dihapus: {$deletedCount}. Supplier yang dilewati karena memiliki riwayat PO: {$skippedCount}.";
+        } elseif ($deletedCount === 0 && $skippedCount > 0) {
+            $message = 'Tidak ada supplier yang bisa dihapus. Semua supplier yang dipilih memiliki riwayat PO.';
+        }
+
+        return redirect()->route('suppliers.index')->with('success', $message);
+    }
+
     public function destroy(Supplier $supplier)
     {
         if ($supplier->purchaseOrders()->exists()) {

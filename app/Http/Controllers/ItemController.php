@@ -155,7 +155,25 @@ class ItemController extends Controller
     public function checkDuplicate(Request $request)
     {
         $name = trim((string) $request->query('name'));
+        $sku = trim((string) $request->query('sku'));
         $excludeId = $request->query('exclude_id');
+
+        if ($sku !== '') {
+            $match = Item::whereRaw('LOWER(sku) = ?', [strtolower($sku)])
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+                ->first();
+
+            return response()->json([
+                'exists' => (bool) $match,
+                'type' => 'sku',
+                'item' => $match ? [
+                    'id' => $match->id,
+                    'sku' => $match->sku,
+                    'name' => $match->name,
+                    'edit_url' => $request->user()?->canAccess('items.edit') ? route('items.edit', $match) : null,
+                ] : null,
+            ]);
+        }
 
         if ($name === '') {
             return response()->json(['exists' => false]);
@@ -167,6 +185,7 @@ class ItemController extends Controller
 
         return response()->json([
             'exists' => (bool) $match,
+            'type' => 'name',
             'item' => $match ? [
                 'id' => $match->id,
                 'sku' => $match->sku,
@@ -231,8 +250,13 @@ class ItemController extends Controller
 
     public function store(Request $request)
     {
+        $skuMode = $request->input('sku_mode', 'existing');
+
         $validated = $request->validate([
-            'sku' => ['nullable', 'string', 'max:100'],
+            'sku_mode' => ['required', 'in:existing,generated'],
+            'sku' => $skuMode === 'generated'
+                ? ['nullable', 'string', 'max:100']
+                : ['required', 'string', 'max:100', Rule::unique('items', 'sku')],
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('items', 'name'), // dicek exact match di level DB
@@ -252,7 +276,7 @@ class ItemController extends Controller
             'description' => ['nullable', 'string'],
         ]);
 
-        if (empty($validated['sku']) || Item::where('sku', $validated['sku'])->exists()) {
+        if ($skuMode === 'generated') {
             $validated['sku'] = $this->generateSku();
         }
 
@@ -320,5 +344,38 @@ class ItemController extends Controller
         $item->delete();
 
         return redirect()->route('items.index')->with('success', 'Barang berhasil dihapus.');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $ids = array_filter(array_map('intval', (array) $request->input('selected_items', [])));
+
+        if (empty($ids)) {
+            return back()->with('error', 'Pilih minimal satu barang untuk dihapus.');
+        }
+
+        $items = Item::whereIn('id', $ids)->get();
+        $deletedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($items as $item) {
+            if ($item->stockMovements()->exists() || $item->purchaseOrderItems()->exists() || $item->saleItems()->exists()) {
+                $skippedCount++;
+                continue;
+            }
+
+            $item->delete();
+            $deletedCount++;
+        }
+
+        $message = 'Barang berhasil dihapus.';
+
+        if ($deletedCount > 0 && $skippedCount > 0) {
+            $message = "Barang yang aman dihapus: {$deletedCount}. Barang yang dilewati karena memiliki riwayat stok, PO, atau penjualan: {$skippedCount}.";
+        } elseif ($deletedCount === 0 && $skippedCount > 0) {
+            $message = 'Tidak ada barang yang bisa dihapus. Semua barang yang dipilih sudah memiliki riwayat stok, PO, atau penjualan.';
+        }
+
+        return redirect()->route('items.index')->with('success', $message);
     }
 }

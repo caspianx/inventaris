@@ -44,19 +44,34 @@
                         <span id="selected-count-label" style="margin-left: 0.5rem; font-weight: 600;"></span>
                     </button>
                 @endif
+                @if(auth()->user()->canAccess('items.delete'))
+                    <button type="submit" form="bulk-delete-form" id="bulk-delete-btn" class="btn btn-outline-danger" disabled style="white-space: nowrap;">
+                        <i class="bi bi-trash"></i> Hapus Terpilih
+                    </button>
+                @endif
             </div>
         </form>
     </div>
 
     <form id="print-barcode-form" method="GET" action="{{ route('items.print-barcode') }}" target="_blank"></form>
+    @if(auth()->user()->canAccess('items.delete'))
+        <form id="bulk-delete-form" method="POST" action="{{ route('items.bulk-delete') }}">
+            @csrf
+        </form>
+    @endif
 
     <!-- TABLE -->
     <div class="table-responsive">
         <table class="table mb-0">
             <thead>
                 <tr>
-                    @if(auth()->user()->canAccess('items.print_barcode'))
-                        <th style="width: 50px;"><input type="checkbox" id="select-all-items"></th>
+                    @if(auth()->user()->canAccess('items.print_barcode') || auth()->user()->canAccess('items.delete'))
+                        <th style="width: 80px;">
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="checkbox" id="select-all-items" aria-label="Pilih semua barang">
+                                <label for="select-all-items" class="form-label mb-0 small text-muted" style="cursor: pointer;">Pilih Semua</label>
+                            </div>
+                        </th>
                     @endif
                     <th>SKU</th>
                     <th>Nama Barang</th>
@@ -71,9 +86,10 @@
             <tbody>
                 @forelse($items as $item)
                     <tr class="{{ $item->isLowStock() ? 'table-danger' : '' }}" style="opacity: {{ $item->isLowStock() ? '1' : '1' }};">
-                        @if(auth()->user()->canAccess('items.print_barcode'))
+                        @if(auth()->user()->canAccess('items.print_barcode') || auth()->user()->canAccess('items.delete'))
                             <td>
-                                <input type="checkbox" class="item-checkbox" name="ids[]" value="{{ $item->id }}" form="print-barcode-form">
+                                <input type="checkbox" class="item-checkbox item-checkbox-visible" name="ids[]" value="{{ $item->id }}" form="print-barcode-form">
+                                <input type="checkbox" class="item-checkbox item-checkbox-hidden" name="selected_items[]" value="{{ $item->id }}" form="bulk-delete-form" style="display: none;">
                             </td>
                         @endif
                         <td>
@@ -133,6 +149,25 @@
         </table>
     </div>
 
+    <div class="modal fade" id="confirmBulkDeleteModal" tabindex="-1" aria-labelledby="confirmBulkDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="confirmBulkDeleteModalLabel">Konfirmasi Hapus Barang</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Anda akan menghapus <strong id="bulk-delete-count">0</strong> barang terpilih.</p>
+                    <p class="text-muted">Barang yang sudah memiliki riwayat stok, PO, atau penjualan akan dilewati.</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" id="confirmBulkDeleteButton">Hapus Barang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- PAGINATION -->
     <div class="card-footer bg-white">
         <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 1rem;">
@@ -150,36 +185,91 @@
     </div>
 </div>
 
-@if(auth()->user()->canAccess('items.print_barcode'))
+@if(auth()->user()->canAccess('items.print_barcode') || auth()->user()->canAccess('items.delete'))
 <script>
 const selectAllCheckbox = document.getElementById('select-all-items');
-const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+const itemCheckboxes = document.querySelectorAll('.item-checkbox-visible');
 const printSelectedBtn = document.getElementById('print-selected-btn');
 const selectedCountLabel = document.getElementById('selected-count-label');
+const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+const bulkDeleteForm = document.getElementById('bulk-delete-form');
 
 function updatePrintButtonState() {
-    const checked = document.querySelectorAll('.item-checkbox:checked');
-    printSelectedBtn.disabled = checked.length === 0;
-    selectedCountLabel.textContent = checked.length > 0 ? `${checked.length} barang dipilih` : '';
-    selectAllCheckbox.checked = checked.length === itemCheckboxes.length && itemCheckboxes.length > 0;
+    const checkedBoxes = Array.from(itemCheckboxes).filter(checkbox => checkbox.checked);
+    const hasSelection = checkedBoxes.length > 0;
+
+    if (printSelectedBtn) {
+        printSelectedBtn.disabled = !hasSelection;
+    }
+
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.disabled = !hasSelection;
+    }
+
+    if (selectedCountLabel) {
+        selectedCountLabel.textContent = hasSelection ? `${checkedBoxes.length} barang dipilih` : '';
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = checkedBoxes.length > 0 && checkedBoxes.length === itemCheckboxes.length;
+        selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < itemCheckboxes.length;
+    }
 }
 
 itemCheckboxes.forEach(checkbox => {
     checkbox.addEventListener('change', function () {
-        const row = this.closest('tr');
-        const qtyInput = row.querySelector('.qty-input');
-        qtyInput.disabled = !this.checked;
+        const hiddenMirror = document.querySelector(`input[type="checkbox"][name="selected_items[]"][value="${this.value}"][form="bulk-delete-form"]`);
+        if (hiddenMirror) {
+            hiddenMirror.checked = this.checked;
+        }
         updatePrintButtonState();
     });
 });
 
-selectAllCheckbox.addEventListener('change', function () {
-    itemCheckboxes.forEach(checkbox => {
-        checkbox.checked = this.checked;
-        checkbox.closest('tr').querySelector('.qty-input').disabled = !this.checked;
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function () {
+        itemCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            const hiddenMirror = document.querySelector(`input[type="checkbox"][name="selected_items[]"][value="${checkbox.value}"][form="bulk-delete-form"]`);
+            if (hiddenMirror) {
+                hiddenMirror.checked = this.checked;
+            }
+        });
+        updatePrintButtonState();
     });
-    updatePrintButtonState();
-});
+}
+
+const bulkDeleteModalElement = document.getElementById('confirmBulkDeleteModal');
+const bulkDeleteModal = bulkDeleteModalElement ? new bootstrap.Modal(bulkDeleteModalElement) : null;
+const bulkDeleteCount = document.getElementById('bulk-delete-count');
+const confirmBulkDeleteButton = document.getElementById('confirmBulkDeleteButton');
+
+if (bulkDeleteBtn) {
+    bulkDeleteBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        const selected = Array.from(itemCheckboxes).filter(checkbox => checkbox.checked);
+
+        if (selected.length === 0) {
+            return;
+        }
+
+        if (bulkDeleteCount) {
+            bulkDeleteCount.textContent = selected.length;
+        }
+
+        if (bulkDeleteModal) {
+            bulkDeleteModal.show();
+        }
+    });
+}
+
+if (confirmBulkDeleteButton && bulkDeleteForm) {
+    confirmBulkDeleteButton.addEventListener('click', function () {
+        bulkDeleteForm.submit();
+    });
+}
+
+updatePrintButtonState();
 </script>
 @endif
 

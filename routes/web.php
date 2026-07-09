@@ -49,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/items-print-barcode', [ItemController::class, 'printBarcode'])
         ->name('items.print-barcode')
         ->middleware('permission:items.print_barcode');
+    Route::post('/items/bulk-delete', [ItemController::class, 'bulkDelete'])
+        ->name('items.bulk-delete')
+        ->middleware('permission:items.delete');
     Route::get('/items-pos-search', [ItemController::class, 'posSearch'])
         ->name('items.pos-search')
         ->middleware('permission:sales.create');
@@ -72,11 +75,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/categories-autocomplete', [CategoryController::class, 'autocomplete'])
         ->name('categories.autocomplete')
         ->middleware('permission:categories.manage');
+    Route::post('/categories/bulk-delete', [CategoryController::class, 'bulkDelete'])
+        ->name('categories.bulk-delete')
+        ->middleware('permission:categories.manage');
     Route::resource('categories', CategoryController::class)
         ->except(['show'])
         ->middleware('permission:categories.manage');
     Route::get('/suppliers-autocomplete', [SupplierController::class, 'autocomplete'])
         ->name('suppliers.autocomplete')
+        ->middleware('permission:suppliers.manage');
+    Route::post('/suppliers/bulk-delete', [SupplierController::class, 'bulkDelete'])
+        ->name('suppliers.bulk-delete')
         ->middleware('permission:suppliers.manage');
     Route::resource('suppliers', SupplierController::class)
         ->except(['show'])

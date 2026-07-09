@@ -11,29 +11,41 @@
             <form method="POST" action="{{ route('items.store') }}">
                 @csrf
                 <div class="row g-4">
-                    <!-- SKU (Auto-generated) -->
+                    <!-- SKU dan Nama -->
                     <div class="col-md-6">
-                        <label class="form-label fw-600">SKU <span style="color: var(--danger);">*</span></label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <label class="form-label fw-semibold mb-0">SKU <span class="text-danger">*</span></label>
+                                <div class="text-muted" style="font-size: 0.9rem;">Apakah SKU sudah ada?</div>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="Pilihan SKU">
+                                <input type="radio" class="btn-check" name="sku_mode" id="sku-existing" value="existing" autocomplete="off" @checked(old('sku_mode', 'existing') === 'existing')>
+                                <label class="btn btn-outline-primary btn-sm" for="sku-existing">Ada</label>
+
+                                <input type="radio" class="btn-check" name="sku_mode" id="sku-generated" value="generated" autocomplete="off" @checked(old('sku_mode', 'existing') === 'generated')>
+                                <label class="btn btn-outline-secondary btn-sm" for="sku-generated">Tidak Ada</label>
+                            </div>
+                        </div>
                         <div class="input-group">
-                            <input type="text" class="form-control" value="{{ old('sku', $autoSku) }}" readonly style="background: var(--gray-100);">
-                            <span class="input-group-text" style="background: var(--gray-100);">
-                                <i class="bi bi-lock" style="color: var(--gray-500);"></i>
+                            <input type="text" name="sku" id="sku-input" class="form-control" value="{{ old('sku', '') }}" placeholder="Masukkan SKU jika sudah ada" style="background: var(--white);">
+                            <span class="input-group-text" id="sku-icon" style="background: var(--white);">
+                                <i class="bi bi-pencil" id="sku-icon-mark" style="color: var(--gray-500);"></i>
                             </span>
                         </div>
-                        <small style="color: var(--gray-500);">SKU dibuat otomatis, tidak dapat diubah</small>
+                        <div id="sku-warning" class="alert alert-danger mt-2 py-2 px-3 d-none" style="border-left: 4px solid var(--danger);"></div>
+                        <div class="form-text" id="sku-help">Pilih “Ada” jika SKU sudah tersedia dan ingin diedit, atau “Tidak Ada” untuk membuat otomatis.</div>
                     </div>
 
-                    <!-- Nama Barang -->
-                    <div class="col-md-6">
-                        <label class="form-label fw-600">Nama Barang <span style="color: var(--danger);">*</span></label>
+                    <div class="col-md-6 d-flex flex-column justify-content-start">
+                        <label class="form-label fw-semibold">Nama Barang <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="name-input" class="form-control" value="{{ old('name') }}" placeholder="Contoh: Kemeja Putih XL" required autocomplete="off">
                         <div id="duplicate-warning" class="alert alert-warning mt-2 py-2 px-3 d-none" style="border-left: 4px solid var(--warning);"></div>
                     </div>
 
-                    <!-- Kategori -->
+                    <!-- Kategori dan Satuan -->
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Kategori</label>
-                        <div class="d-flex gap-2">
+                        <label class="form-label fw-semibold">Kategori</label>
+                        <div class="input-group">
                             <select name="category_id" id="category-select" class="form-select">
                                 <option value="">- Tanpa Kategori -</option>
                                 @foreach($categories as $cat)
@@ -48,58 +60,55 @@
                         </div>
                     </div>
 
-                    <!-- Satuan -->
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Satuan <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label fw-semibold">Satuan <span class="text-danger">*</span></label>
                         <input type="text" name="unit" class="form-control" value="{{ old('unit', 'pcs') }}" placeholder="pcs, box, pack, dll" required>
                     </div>
 
-                    <!-- Harga Beli -->
+                    <!-- Harga -->
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Harga Beli <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label fw-semibold">Harga Beli <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text" style="background: var(--gray-100); color: var(--gray-600);">Rp</span>
                             <input type="number" step="0.01" name="purchase_price" class="form-control numeric-autoselect" value="{{ old('purchase_price', 0) }}" placeholder="0" required>
                         </div>
                     </div>
 
-                    <!-- Harga Jual -->
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Harga Jual <span style="color: var(--danger);">*</span></label>
+                        <label class="form-label fw-semibold">Harga Jual <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text" style="background: var(--gray-100); color: var(--gray-600);">Rp</span>
                             <input type="number" step="0.01" name="selling_price" class="form-control numeric-autoselect" value="{{ old('selling_price', 0) }}" placeholder="0" required>
                         </div>
                     </div>
 
-                    <!-- Stok Minimum -->
+                    <!-- Stok -->
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Stok Minimum</label>
+                        <label class="form-label fw-semibold">Stok Minimum</label>
                         <input type="number" name="min_stock" class="form-control numeric-autoselect" value="{{ old('min_stock', 0) }}" placeholder="0">
-                        <small style="color: var(--gray-500);">Akan memberikan notifikasi ketika stok dibawah nilai ini</small>
+                        <div class="form-text">Akan memberikan notifikasi ketika stok dibawah nilai ini.</div>
                     </div>
 
-                    <!-- Stok Awal -->
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Stok Awal</label>
+                        <label class="form-label fw-semibold">Stok Awal</label>
                         <input type="number" name="current_stock" class="form-control numeric-autoselect" value="{{ old('current_stock', 0) }}" placeholder="0" required>
                     </div>
 
                     <!-- Deskripsi -->
                     <div class="col-12">
-                        <label class="form-label fw-600">Deskripsi</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Informasi tambahan tentang barang ini...">{{ old('description') }}</textarea>
+                        <label class="form-label fw-semibold">Deskripsi</label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="Informasi tambahan tentang barang ini...">{{ old('description') }}</textarea>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="mt-5 d-flex gap-2">
-                    <button type="submit" id="submit-btn" class="btn btn-primary" style="padding: 0.75rem 2rem;">
-                        <i class="bi bi-check-lg"></i> Simpan Barang
-                    </button>
-                    <a href="{{ route('items.index') }}" class="btn btn-outline-secondary" style="padding: 0.75rem 2rem;">
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a href="{{ route('items.index') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-lg"></i> Batal
                     </a>
+                    <button type="submit" id="submit-btn" class="btn btn-primary px-4">
+                        <i class="bi bi-check-lg"></i> Simpan Barang
+                    </button>
                 </div>
             </form>
         </div>
@@ -111,6 +120,71 @@ let duplicateCheckTimer;
 const nameInput = document.getElementById('name-input');
 const warningBox = document.getElementById('duplicate-warning');
 const submitBtn = document.getElementById('submit-btn');
+const skuExistingRadio = document.getElementById('sku-existing');
+const skuGeneratedRadio = document.getElementById('sku-generated');
+const skuInput = document.getElementById('sku-input');
+const skuHelp = document.getElementById('sku-help');
+const skuIconMark = document.getElementById('sku-icon-mark');
+const skuWarning = document.getElementById('sku-warning');
+
+function updateSkuMode() {
+    const isExisting = skuExistingRadio.checked;
+
+    if (isExisting) {
+        skuInput.readOnly = false;
+        skuInput.value = skuInput.value || '{{ old('sku', '') }}';
+        skuInput.placeholder = 'Masukkan SKU jika sudah ada';
+        skuHelp.textContent = 'Pilih “Ada” jika SKU sudah tersedia dan ingin diedit, atau “Tidak Ada” untuk membuat otomatis.';
+        skuIconMark.className = 'bi bi-pencil';
+        skuWarning.classList.add('d-none');
+    } else {
+        skuInput.readOnly = true;
+        skuInput.value = '{{ old('sku', $autoSku) }}';
+        skuInput.placeholder = 'SKU akan dibuat otomatis';
+        skuHelp.textContent = 'SKU akan dihasilkan otomatis sesuai pola terbaru.';
+        skuIconMark.className = 'bi bi-shuffle';
+        skuWarning.classList.add('d-none');
+    }
+}
+
+skuExistingRadio.addEventListener('change', updateSkuMode);
+skuGeneratedRadio.addEventListener('change', updateSkuMode);
+
+updateSkuMode();
+
+let skuCheckTimer;
+
+skuInput.addEventListener('input', function () {
+    clearTimeout(skuCheckTimer);
+
+    if (!skuExistingRadio.checked) {
+        skuWarning.classList.add('d-none');
+        return;
+    }
+
+    const skuValue = this.value.trim();
+
+    if (skuValue.length < 2) {
+        skuWarning.classList.add('d-none');
+        return;
+    }
+
+    skuCheckTimer = setTimeout(() => {
+        fetch(`{{ route('items.check-duplicate') }}?sku=${encodeURIComponent(skuValue)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists && data.type === 'sku') {
+                    skuWarning.innerHTML = `<i class="bi bi-exclamation-triangle"></i> SKU <strong>${skuValue}</strong> sudah digunakan oleh barang <strong>${data.item.name}</strong>.`;
+                    if (data.item.edit_url) {
+                        skuWarning.innerHTML += ` <a href="${data.item.edit_url}" class="alert-link">Buka data</a>`;
+                    }
+                    skuWarning.classList.remove('d-none');
+                } else {
+                    skuWarning.classList.add('d-none');
+                }
+            });
+    }, 300);
+});
 
 nameInput.addEventListener('input', function () {
     clearTimeout(duplicateCheckTimer);
