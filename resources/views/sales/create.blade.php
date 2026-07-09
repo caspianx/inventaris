@@ -350,7 +350,7 @@
         <div class="sticky-payment">
             <form method="POST" action="{{ route('sales.store') }}" id="pos-form">
                 @csrf
-                <input type="hidden" name="print_receipt" value="1">
+                <input type="hidden" name="print_receipt" id="print-receipt-input" value="0">
                 <div id="cart-hidden-inputs"></div>
 
                 <!-- PAYMENT SUMMARY -->
@@ -401,7 +401,7 @@
                         <textarea name="notes" class="form-control" rows="2" placeholder="Contoh: Bungkus rapi, dll..." style="color: white; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); resize: none;"></textarea>
                     </div>
 
-                    <button type="submit" class="payment-btn" id="submit-btn" disabled>
+                    <button type="button" class="payment-btn" id="submit-btn" disabled data-bs-toggle="modal" data-bs-target="#receiptChoiceModal">
                         <i class="bi bi-printer"></i> Bayar & Cetak Struk
                     </button>
                 </div>
@@ -416,6 +416,24 @@
                     </a>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="receiptChoiceModal" tabindex="-1" aria-labelledby="receiptChoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="receiptChoiceModalLabel">Cetak struk?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Pilih apakah Anda ingin membuka tampilan struk untuk dicetak sekarang.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="skip-receipt-btn">Tidak</button>
+                <button type="button" class="btn btn-primary" id="print-receipt-btn">Cetak Struk</button>
+            </div>
         </div>
     </div>
 </div>
@@ -457,6 +475,10 @@ const paymentMethodSelect = document.getElementById('payment-method');
 const paidAmountInput = document.getElementById('paid-amount-input');
 const paidAmountGroup = document.getElementById('paid-amount-group');
 const submitBtn = document.getElementById('submit-btn');
+const printReceiptInput = document.getElementById('print-receipt-input');
+const printReceiptBtn = document.getElementById('print-receipt-btn');
+const skipReceiptBtn = document.getElementById('skip-receipt-btn');
+const posForm = document.getElementById('pos-form');
 
 function formatRp(value) {
     return 'Rp ' + Math.round(value).toLocaleString('id-ID');
@@ -711,38 +733,7 @@ document.addEventListener('click', function (e) {
     }
 });
 
-// ==== Submit form ====
-document.getElementById('pos-form').addEventListener('submit', function (e) {
-    if (cart.length === 0) {
-        e.preventDefault();
-        alert('Tambahkan barang ke keranjang terlebih dahulu');
-        return;
-    }
-
-    // Validasi pembayaran - fokus ke paid_amount tanpa alert
-    const subtotal = cart.reduce((sum, line) => sum + (line.price * line.qty), 0);
-    const discount = Math.min(parseFloat(discountInput.value) || 0, subtotal);
-    const total = subtotal - discount;
-    const paid = parsePaidAmount(paidAmountInput.value) || 0;
-
-    if (paid < total) {
-        e.preventDefault();
-        // Highlight the paid amount input
-        paidAmountInput.focus();
-        paidAmountInput.style.borderColor = '#ff6b6b';
-        paidAmountInput.style.boxShadow = '0 0 0 3px rgba(255, 107, 107, 0.1)';
-        
-        // Remove highlight after 3 seconds
-        setTimeout(() => {
-            paidAmountInput.style.borderColor = '';
-            paidAmountInput.style.boxShadow = '';
-        }, 3000);
-        return;
-    }
-
-    // Convert paid_amount ke format numeric sebelum submit
-    paidAmountInput.value = parsePaidAmount(paidAmountInput.value);
-
+function buildCartInputs() {
     const container = document.getElementById('cart-hidden-inputs');
     container.innerHTML = '';
     cart.forEach((line, i) => {
@@ -751,7 +742,69 @@ document.getElementById('pos-form').addEventListener('submit', function (e) {
             <input type="hidden" name="items[${i}][quantity]" value="${line.qty}">
         `);
     });
+}
+
+function submitPosForm(printReceipt) {
+    printReceiptInput.value = printReceipt ? '1' : '0';
+    paidAmountInput.value = parsePaidAmount(paidAmountInput.value);
+    buildCartInputs();
+    posForm.requestSubmit();
+}
+
+posForm.addEventListener('submit', function (e) {
+    if (cart.length === 0) {
+        e.preventDefault();
+        alert('Tambahkan barang ke keranjang terlebih dahulu');
+        return;
+    }
+
+    const subtotal = cart.reduce((sum, line) => sum + (line.price * line.qty), 0);
+    const discount = Math.min(parseFloat(discountInput.value) || 0, subtotal);
+    const total = subtotal - discount;
+    const paid = parsePaidAmount(paidAmountInput.value) || 0;
+
+    if (paid < total) {
+        e.preventDefault();
+        paidAmountInput.focus();
+        paidAmountInput.style.borderColor = '#ff6b6b';
+        paidAmountInput.style.boxShadow = '0 0 0 3px rgba(255, 107, 107, 0.1)';
+
+        setTimeout(() => {
+            paidAmountInput.style.borderColor = '';
+            paidAmountInput.style.boxShadow = '';
+        }, 3000);
+        return;
+    }
+
+    paidAmountInput.value = parsePaidAmount(paidAmountInput.value);
+    buildCartInputs();
 });
+
+if (printReceiptBtn) {
+    printReceiptBtn.addEventListener('click', function () {
+        const modalEl = document.getElementById('receiptChoiceModal');
+        if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        submitPosForm(true);
+    });
+}
+
+if (skipReceiptBtn) {
+    skipReceiptBtn.addEventListener('click', function () {
+        const modalEl = document.getElementById('receiptChoiceModal');
+        if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        submitPosForm(false);
+    });
+}
 
 calculateTotals();
 updateStats();

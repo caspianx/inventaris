@@ -252,9 +252,9 @@ class ReportController extends Controller
 
             $unit = trim($this->getRowValue($row, $headerMap, 'unit', 3)) ?: '-';
             $purchasePrice = $this->toDecimal($this->getRowValue($row, $headerMap, 'purchase_price', 4));
-            $currentStock = (int) $this->getRowValue($row, $headerMap, 'current_stock', 5);
-            $sellingPrice = $this->toDecimal($this->getRowValue($row, $headerMap, 'selling_price', 6) ?: $this->getRowValue($row, $headerMap, 'purchase_price', 4));
-            $minStock = (int) $this->getRowValue($row, $headerMap, 'min_stock', 7);
+            $sellingPrice = $this->toDecimal($this->getRowValue($row, $headerMap, 'selling_price', 5) ?: $this->getRowValue($row, $headerMap, 'purchase_price', 4));
+            $minStock = (int) $this->getRowValue($row, $headerMap, 'min_stock', 6);
+            $currentStock = (int) $this->getRowValue($row, $headerMap, 'current_stock', 7);
             $description = trim($this->getRowValue($row, $headerMap, 'description', 8));
 
             $item = Item::updateOrCreate(

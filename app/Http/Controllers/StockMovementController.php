@@ -41,30 +41,34 @@ class StockMovementController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $item = Item::findOrFail($validated['item_id']);
+        try {
+            DB::transaction(function () use ($validated, $request): void {
+                $item = Item::lockForUpdate()->findOrFail($validated['item_id']);
 
-        if ($validated['type'] === 'out' && $item->current_stock < $validated['quantity']) {
-            return back()->withInput()->with('error', 'Stok tidak mencukupi. Stok tersedia: '.$item->current_stock);
+                if ($validated['type'] === 'out' && $item->current_stock < $validated['quantity']) {
+                    throw new \RuntimeException('Stok tidak mencukupi. Stok tersedia: '.$item->current_stock);
+                }
+
+                StockMovement::create([
+                    'item_id' => $item->id,
+                    'type' => $validated['type'],
+                    'quantity' => $validated['quantity'],
+                    'reference_type' => 'manual',
+                    'notes' => $validated['notes'] ?? null,
+                    'user_id' => $request->user()->id,
+                ]);
+
+                if ($validated['type'] === 'in') {
+                    $item->increment('current_stock', $validated['quantity']);
+                } elseif ($validated['type'] === 'out') {
+                    $item->decrement('current_stock', $validated['quantity']);
+                } else { // adjustment: set langsung ke jumlah yang diinput
+                    $item->update(['current_stock' => $validated['quantity']]);
+                }
+            });
+        } catch (\RuntimeException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
         }
-
-        DB::transaction(function () use ($validated, $item, $request) {
-            StockMovement::create([
-                'item_id' => $item->id,
-                'type' => $validated['type'],
-                'quantity' => $validated['quantity'],
-                'reference_type' => 'manual',
-                'notes' => $validated['notes'] ?? null,
-                'user_id' => $request->user()->id,
-            ]);
-
-            if ($validated['type'] === 'in') {
-                $item->increment('current_stock', $validated['quantity']);
-            } elseif ($validated['type'] === 'out') {
-                $item->decrement('current_stock', $validated['quantity']);
-            } else { // adjustment: set langsung ke jumlah yang diinput
-                $item->update(['current_stock' => $validated['quantity']]);
-            }
-        });
 
         return redirect()->route('stock-movements.index')->with('success', 'Mutasi stok berhasil dicatat.');
     }

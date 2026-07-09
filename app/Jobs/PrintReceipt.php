@@ -75,6 +75,14 @@ class PrintReceipt implements ShouldQueue
 
     protected function buildTextReceipt(StoreSetting $store, string $receiptSize): string
     {
+        // Determine max characters per line based on receipt size
+        $maxCharsPerLine = match($receiptSize) {
+            '58MM' => 32,
+            '80MM' => 40,
+            'ROLL' => 50,
+            default => 40,
+        };
+
         $content = "--- Struk Belanja ({$receiptSize}) ---\n";
         if ($this->simulate) {
             $content .= "*** SIMULASI ***\n";
@@ -84,26 +92,64 @@ class PrintReceipt implements ShouldQueue
             $content .= '[Logo: '.basename($store->logo_path)."]\n";
         }
 
-        $content .= $store->name."\n";
-        $content .= ($store->address ? $store->address."\n" : '');
+        $content .= $this->wrapText($store->name, $maxCharsPerLine)."\n";
+        if ($store->address) {
+            $content .= $this->wrapText($store->address, $maxCharsPerLine)."\n";
+        }
         $content .= 'Tanggal: '.$this->sale->created_at->format('Y-m-d H:i:s')."\n";
-        $content .= 'No. Nota: '.$this->sale->id."\n";
+        $content .= 'No. Nota: '.($this->sale->invoice_number ?? $this->sale->id)."\n";
         if ($this->simulate) {
             $content .= "Keterangan: Cetak simulasi\n";
         }
-        $content .= "---------------------\n";
+        $content .= str_repeat('-', min($maxCharsPerLine, 35))."\n";
+
         foreach ($this->sale->items as $line) {
             $name = $line->item_name ?? ($line->item?->name ?? '');
             $qty = $line->quantity;
             $price = $line->price;
-            $content .= $name.' x'.$qty.'  '.number_format($price, 0, ',', '.')."\n";
+            $priceStr = number_format($price, 0, ',', '.');
+            
+            // Format: "Name   x Qty   Price"
+            $qtyStr = "x{$qty}";
+            $nameMaxLen = $maxCharsPerLine - 8 - strlen($qtyStr) - strlen($priceStr);
+            $nameTrimmed = substr($name, 0, max(15, $nameMaxLen));
+            
+            $line = str_pad($nameTrimmed, $nameMaxLen) . str_pad($qtyStr, 5, ' ', STR_PAD_LEFT) . ' ' . str_pad($priceStr, 10, ' ', STR_PAD_LEFT);
+            $content .= substr($line, 0, $maxCharsPerLine)."\n";
         }
-        $content .= "---------------------\n";
-        $content .= 'Total: '.number_format($this->sale->total, 0, ',', '.')."\n";
-        $content .= "---------------------\n";
-        $content .= "Terima kasih\n";
+
+        $content .= str_repeat('-', min($maxCharsPerLine, 35))."\n";
+        $totalStr = number_format($this->sale->total, 0, ',', '.');
+        $totalLine = 'Total: '.$totalStr;
+        $content .= $totalLine."\n";
+        $content .= str_repeat('-', min($maxCharsPerLine, 35))."\n";
+        $content .= $this->wrapText($store->receipt_thank_you_text ?? 'Terima kasih', $maxCharsPerLine)."\n";
 
         return $content;
+    }
+
+    protected function wrapText(string $text, int $maxWidth): string
+    {
+        $words = explode(' ', $text);
+        $lines = [];
+        $currentLine = '';
+
+        foreach ($words as $word) {
+            if (strlen($currentLine) + strlen($word) + 1 <= $maxWidth) {
+                $currentLine .= ($currentLine ? ' ' : '') . $word;
+            } else {
+                if ($currentLine) {
+                    $lines[] = $currentLine;
+                }
+                $currentLine = $word;
+            }
+        }
+
+        if ($currentLine) {
+            $lines[] = $currentLine;
+        }
+
+        return implode("\n", $lines);
     }
 
     protected function buildHtmlReceipt(StoreSetting $store): string
@@ -122,6 +168,7 @@ class PrintReceipt implements ShouldQueue
 
         return view('sales.receipt', [
             'sale' => $this->sale,
+            'storeSetting' => $store,
             'logoDataUri' => $logoDataUri,
         ])->render();
     }
@@ -131,6 +178,8 @@ class PrintReceipt implements ShouldQueue
         $printed = false;
 
         if (PHP_OS_FAMILY === 'Windows') {
+            $filename = str_replace('/', DIRECTORY_SEPARATOR, $filename);
+            $printer = trim($printer);
             $escapedFile = str_replace("'", "''", $filename);
             $escapedPrinter = str_replace("'", "''", $printer);
             $powershell = "for (\$i = 1; \$i -le $copies; \$i++) { Get-Content -Path '$escapedFile' | Out-Printer -Name '$escapedPrinter' }";

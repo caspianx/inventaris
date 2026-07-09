@@ -14,7 +14,9 @@ class DashboardController extends Controller
         $totalItems = Item::count();
         $lowStockItems = Item::lowStock()->with('category')->orderBy('current_stock')->take(10)->get();
         $lowStockCount = Item::lowStock()->count();
-        $totalStockValue = Item::selectRaw('SUM(current_stock * purchase_price) as total')->value('total') ?? 0;
+        $totalStockValue = (float) Item::query()
+            ->selectRaw('SUM(COALESCE(current_stock, 0) * COALESCE(purchase_price, 0)) as total')
+            ->value('total') ?? 0;
         $totalSuppliers = DB::table('suppliers')->count();
         $pendingPOs = PurchaseOrder::whereIn('status', ['draft', 'ordered'])->count();
 

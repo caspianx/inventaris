@@ -31,6 +31,11 @@ class CashDrawerService
 
             if ($driver === 'network') {
                 $client = new Client(['timeout' => 3]);
+                $address = trim((string) $address);
+                if (! filter_var($address, FILTER_VALIDATE_URL)) {
+                    return ['success' => false, 'error' => 'Invalid cash drawer URL: '.$address];
+                }
+
                 // Send a simple POST payload with sale info; device should accept it.
                 $response = $client->post($address, [
                     'json' => [

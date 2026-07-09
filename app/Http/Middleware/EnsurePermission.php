@@ -16,7 +16,13 @@ class EnsurePermission
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        foreach ($permissions as $permission) {
+        $permissionList = collect($permissions)
+            ->flatMap(fn ($permission) => explode(',', (string) $permission))
+            ->map(fn ($permission) => trim($permission))
+            ->filter()
+            ->all();
+
+        foreach ($permissionList as $permission) {
             if ($user->canAccess($permission)) {
                 return $next($request);
             }

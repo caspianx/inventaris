@@ -50,7 +50,7 @@ class PrintFileController extends Controller
         $safeName = basename($filename);
         $path = storage_path('prints/'.$safeName);
 
-        if (! File::exists($path)) {
+        if ($safeName === '' || $safeName !== $filename || ! File::exists($path)) {
             abort(404);
         }
 

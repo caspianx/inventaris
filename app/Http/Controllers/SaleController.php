@@ -53,6 +53,7 @@ class SaleController extends Controller
             'paid_amount' => ['required', 'numeric', 'min:0'],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
+            'print_receipt' => ['nullable', 'boolean'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_id' => ['required', 'exists:items,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -131,16 +132,17 @@ class SaleController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
+        $printReceiptRequested = $request->boolean('print_receipt');
         $printMessage = 'Transaksi berhasil disimpan dan struk telah diproses.';
         $printError = null;
 
         try {
             $store = StoreSetting::current();
-            if ($store->auto_print_receipt || $request->boolean('print_receipt')) {
+            if ($store->auto_print_receipt || $printReceiptRequested) {
                 if (method_exists(PrintReceipt::class, 'dispatchSync')) {
-                    PrintReceipt::dispatchSync($sale);
+                    PrintReceipt::dispatchSync($sale, $printReceiptRequested);
                 } else {
-                    PrintReceipt::dispatch($sale)->onConnection('sync');
+                    PrintReceipt::dispatch($sale, $printReceiptRequested)->onConnection('sync');
                 }
             }
         } catch (\Throwable $e) {
@@ -159,11 +161,21 @@ class SaleController extends Controller
             Log::error('Auto open cash drawer failed: '.$e->getMessage());
         }
 
+        if ($printReceiptRequested) {
+            return redirect()->route('sales.show', ['sale' => $sale, 'print' => 1])
+                ->with('pos_success', $printError === null)
+                ->with('pos_message', $printMessage)
+                ->with('pos_sale_id', $sale->id)
+                ->with('pos_error', $printError)
+                ->with('pos_print_receipt', $printReceiptRequested);
+        }
+
         return redirect()->route('sales.create')
             ->with('pos_success', $printError === null)
             ->with('pos_message', $printMessage)
             ->with('pos_sale_id', $sale->id)
-            ->with('pos_error', $printError);
+            ->with('pos_error', $printError)
+            ->with('pos_print_receipt', $printReceiptRequested);
     }
 
     /**
@@ -186,6 +198,7 @@ class SaleController extends Controller
 
         return view('sales.receipt', [
             'sale' => $sale,
+            'storeSetting' => $store,
             'logoDataUri' => $logoDataUri,
         ]);
     }

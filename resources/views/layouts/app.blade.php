@@ -1295,19 +1295,19 @@
             @if(session('success'))
                 <div class="alert alert-success">
                     <i class="bi bi-check-circle"></i>
-                    <div>{{ session('success') }}</div>
+                    <div>{{ e(session('success')) }}</div>
                 </div>
             @endif
             @if(session('warning'))
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-circle"></i>
-                    <div>{{ session('warning') }}</div>
+                    <div>{{ e(session('warning')) }}</div>
                 </div>
             @endif
             @if(session('error'))
                 <div class="alert alert-danger">
                     <i class="bi bi-x-circle"></i>
-                    <div>{{ session('error') }}</div>
+                    <div>{{ e(session('error')) }}</div>
                 </div>
             @endif
             @if($errors->any())
