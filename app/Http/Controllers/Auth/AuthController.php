@@ -3,13 +3,19 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class AuthController extends Controller
 {
     public function showLogin()
     {
+        if (! Schema::hasTable((new User())->getTable()) || ! User::where('role', 'admin')->exists()) {
+            return redirect()->route('install');
+        }
+
         return view('auth.login');
     }
 

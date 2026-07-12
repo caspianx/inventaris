@@ -22,10 +22,13 @@ class PrintReceipt implements ShouldQueue
 
     protected bool $simulate;
 
-    public function __construct(Sale $sale, bool $simulate = false)
+    protected bool $printToDevice;
+
+    public function __construct(Sale $sale, bool $simulate = false, bool $printToDevice = false)
     {
         $this->sale = $sale;
         $this->simulate = $simulate;
+        $this->printToDevice = $printToDevice;
     }
 
     public function handle(): void
@@ -51,7 +54,7 @@ class PrintReceipt implements ShouldQueue
         file_put_contents($dir.DIRECTORY_SEPARATOR.$htmlFilename, $htmlContent);
 
         $printedToDevice = false;
-        if (! $this->simulate && ! empty($printer)) {
+        if (! $this->simulate && $this->printToDevice && ! empty($printer)) {
             $printedToDevice = $this->sendToPrinter($dir.DIRECTORY_SEPARATOR.$txtFilename, $printer, $copies);
         }
 

@@ -6,194 +6,49 @@ Aplikasi ini adalah sistem untuk mencatat barang/stok toko Anda. Panduan ini aka
 
 ---
 
-## ✅ Apa Yang Perlu Anda Siapkan
+PANDUAN RINGKAS INSTALASI (diperbarui)
 
-**Sebelum mulai, pastikan Anda punya:**
+Dokumentasi ini disederhanakan untuk mencerminkan alur instalasi terbaru:
 
-- ✅ Komputer Windows, Mac, atau Linux
-- ✅ Koneksi Internet (untuk download tools)
-- ✅ Ruang di hard drive minimal 1 GB (ukuran folder kosong kurang lebih)
-- ✅ 30-60 menit waktu luang
-- ✅ Notepad atau text editor (seperti Notepad bawaan Windows)
+- `Create Database` di halaman instalasi (`/install`) hanya membuat database.
+- Menu migrasi (`/install/migrate-existing`) menjalankan migrasi struktur tabel saja (tanpa seeder).
+- Setelah migrasi berhasil, UI akan mengarahkan kembali ke halaman instalasi untuk membuat admin pertama.
 
-**Yang Akan Kami Install (Jangan khawatir, otomatis semua):**
-- 🔧 PHP = Bahasa program untuk membuat aplikasi berjalan
-- 📦 Composer = Alat bantu mengunduh komponen aplikasi
-- 📱 Node.js = Alat bantu membuat tampilan lebih cantik
-- 📊 Database = Tempat penyimpanan data barang Anda
+Langkah cepat:
 
-Semua tools ini gratis dan aman digunakan!
+1. Pastikan Anda punya PHP (8.2+), Composer, dan Node.js terinstall, serta database server (MySQL/MariaDB) berjalan.
+2. Salin `.env.example` ke `.env` atau gunakan web installer untuk memasukkan konfigurasi DB.
+3. Jalankan `composer install` dan `npm install` jika Anda bekerja dari source.
+4. Jalankan server lokal:
 
----
-
-## 🪟 PANDUAN INSTALASI UNTUK WINDOWS (Yang Paling Mudah)
-
-Jika Anda pakai Windows, ini cara yang paling mudah! Kami akan menggunakan XAMPP yang sudah mengemas semua tools yang dibutuhkan jadi tinggal klik-klik saja.
-
-### 📥 LANGKAH 1: Download XAMPP (5 menit)
-
-**XAMPP adalah:** Seperti kotak berisikan semua alat yang kita butuhkan dalam satu tempat.
-
-1. **Buka browser** (Chrome, Firefox, Edge, dll)
-2. **Kunjungi:** https://www.apachefriends.org/
-3. **Anda akan melihat tombol download**, pilih yang **Windows** (bukan Mac atau Linux)
-4. Cari yang versi **8.2 atau lebih besar** di bagian PHP
-5. Klik tombol **"Download"** dan tunggu file selesai diunduh (sekitar 300 MB, 5-10 menit tergantung internet)
-
-✅ **Selesai! File biasanya tersimpan di folder "Downloads"**
-
----
-
-### 💾 LANGKAH 2: Install XAMPP (3 menit)
-
-1. **Buka folder Downloads** dan temukan file `xampp-installer-x.x.x` (ada nama versi di belakang)
-2. **Double-klik file tersebut** (atau klik kanan → Open)
-3. Jika ada pertanyaan "Apakah Anda ingin mengizinkan perubahan?", klik **"Yes"**
-4. **Jendela instalasi akan terbuka**, klik tombol **"Next"** sampai selesai
-5. Saat diminta memilih komponen, pastikan yang di-centang:
-   - ✅ Apache
-   - ✅ MySQL
-   - ✅ PHP (versi 8.2 atau lebih baru)
-   - ✅ PhpMyAdmin (opsional tapi berguna)
-6. Terus klik **"Next"** hingga ada tombol **"Finish"**, lalu klik **"Finish"**
-
-✅ **Selesai! XAMPP sudah terinstall di komputer Anda**
-
----
-
-### ▶️ LANGKAH 3: Jalankan XAMPP (1 menit)
-
-1. **Cari dan buka** "XAMPP Control Panel" dari menu Windows (atau double-klik XAMPP shortcut jika ada)
-2. **Jendela XAMPP akan muncul**, Anda akan melihat daftar services:
-   - Apache
-   - MySQL
-   - PHP
-
-3. **Klik tombol "Start" untuk Apache dan MySQL**
-
-Hasilnya akan terlihat seperti ini:
-```
-Apache     [Start]  ← Klik Start, nanti akan hijau
-MySQL      [Start]  ← Klik Start, nanti akan hijau
-PHP        (tidak perlu di-start)
+```bash
+php artisan serve
 ```
 
-✅ **Jika sudah berwarna HIJAU dan tulisannya "Running", berarti berhasil!**
+5. Buka browser ke `http://127.0.0.1:8000/install` dan ikuti alur:
+   - Isi konfigurasi database (atau biarkan `.env` terisi), klik **Create Database** untuk membuat DB.
+   - Setelah DB dibuat, Anda akan diarahkan ke halaman migrasi; klik **Run Migrations** (struktur saja).
+   - Setelah migrasi selesai, Anda kembali ke halaman instalasi dan akan melihat form pembuatan admin pertama.
 
----
+6. Isi form admin pertama dan submit.
 
-### 📱 LANGKAH 4: Install Node.js (3 menit)
+Catatan: Jika Anda lebih suka melakukan semuanya lewat CLI, langkah yang setara adalah:
 
-**Node.js adalah:** Alat yang membuat tampilan aplikasi lebih cantik dan responsif.
-
-1. **Buka browser** dan kunjungi: https://nodejs.org/
-2. **Anda akan melihat 2 tombol download:**
-   - Pilih yang **"LTS"** (Long Term Support = lebih stabil)
-   - **Untuk Windows**, ambil yang **.msi**
-3. Klik tombol download dan tunggu file selesai (sekitar 30 MB, 1-2 menit)
-4. **Double-klik file `node-vXX.msi`** yang sudah diunduh
-5. **Setup wizard akan muncul**, klik **"Next"** berkali-kali
-6. Pastikan ada centang di "Add to PATH" (akan otomatis di-centang)
-7. Klik **"Install"** dan tunggu selesai
-8. Klik **"Finish"**
-
-✅ **Selesai! Node.js sudah terinstall**
-
----
-
-### 🔧 LANGKAH 5: Install Composer (2 menit)
-
-**Composer adalah:** Seperti app store, tempat kita mengunduh komponen-komponen siap pakai untuk aplikasi kita.
-
-1. **Buka browser** dan kunjungi: https://getcomposer.org/download/
-2. **Cari tombol "Composer Setup"** dan klik untuk Windows installer
-3. Klik download dan tunggu file selesai (sekitar 5 MB)
-4. **Double-klik file `Composer-Setup.exe`**
-5. Setup wizard akan muncul dan **secara otomatis akan mendeteksi PHP Anda**
-6. Klik **"Next"** sampai bertemu setup screen, lalu klik **"Install"**
-7. Tunggu proses selesai, klik **"Finish"**
-
-✅ **Selesai! Semua tools sudah terinstall!**
-
----
-
-### 📂 LANGKAH 6: Download Aplikasi (2 menit)
-
-Sekarang kita akan mendownload aplikasi Inventory-nya.
-
-**Opsi A: Menggunakan Git (Jika sudah terinstall)**
-```
-Abaikan langkah ini jika belum pernah dengar Git
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --force   # hanya jika Anda yakin
+npm install
+npm run build
+php artisan serve
 ```
 
-**Opsi B: Download File Langsung (RECOMMENDED untuk pemula)**
+Jika Anda menjalankan di lingkungan XAMPP, pastikan Apache dan MySQL aktif sebelum mengakses aplikasi.
 
-1. **Buka browser** dan kunjungi: https://github.com/caspianx/inventaris
-2. **Cari tombol hijau yang bertulisan "Code"** di atas kanan
-3. **Klik dan pilih "Download ZIP"**
-4. File akan diunduh (ukuran sekitar 50-100 MB, tunggu 1-2 menit)
-5. **Extract ZIP file:**
-   - Klik kanan pada file ZIP yang sudah diunduh
-   - Pilih "Extract All..."
-   - Pilih lokasi `C:\xampp\htdocs` (folder tempat XAMPP menyimpan aplikasi web)
-   - Klik "Extract"
-
-✅ **Folder "inventaris" sudah ada di `C:\xampp\htdocs\`**
-
----
-
-### ⚙️ LANGKAH 7: Setup Aplikasi (5 menit)
-
-Sekarang kita akan mengatur aplikasi agar siap digunakan.
-
-1. **Buka Command Prompt** (CMD):
-   - Tekan **Windows + R**
-   - Ketik: `cmd`
-   - Tekan Enter
-
-2. **Masuk ke folder aplikasi**, ketik baris ini dan tekan Enter:
-   ```
-   cd C:\xampp\htdocs\inventaris
-   ```
-   (Jika folder nama berbeda, composen namanya)
-
-3. **Ketik perintah ini dan tekan Enter:**
-   ```
-   composer install
-   ```
-   Tunggu proses berjalan (akan melihat banyak text bergerak, 2-5 menit)
-
-4. **Setelah selesai, ketik:**
-   ```
-   npm install
-   ```
-   Tunggu lagi (1-3 menit)
-
-✅ **Jika selesai tanpa error merah, berarti berhasil!**
-
----
-
-### 🔑 LANGKAH 8: Setup File Konfigurasi (3 menit)
-
-1. **Buka folder** `C:\xampp\htdocs\inventaris` menggunakan File Explorer
-2. **Cari file bernama `.env.example`** (jika tidak terlihat, tekan Ctrl+H untuk melihat hidden files)
-3. **Buat copy file tersebut** (klik kanan → Copy)
-4. **Paste di folder yang sama** (klik kanan → Paste)
-5. **Rename hasil copy menjadi `.env`** (klik kanan file → Rename → ketik `.env` → Enter)
-6. **Double-click file `.env`** untuk membukanya dengan text editor
-7. **Cari baris ini:**
-   ```
-   APP_KEY=
-   ```
-8. **Di Command Prompt, ketik:**
-   ```
-   php artisan key:generate
-   ```
-   Tunggu sebentar, akan melihat pesan "Application key set successfully"
-
-9. **File `.env` akan otomatis ter-update**, sekarang Anda bisa tutup file tersebut
-
-✅ **Setup konfigurasi selesai!**
+Troubleshooting singkat:
+- Jika gagal akses database, periksa kredensial di `.env`.
+- Jika migrasi gagal karena tabel migrations tidak ada, buka menu migrasi di UI atau jalankan `php artisan migrate:install`.
 
 ---
 

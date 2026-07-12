@@ -8,11 +8,10 @@ Panduan mudah untuk menjalankan aplikasi Inventory tanpa perlu membuka Command P
 
 ### Cara Paling Mudah: Double-Click File
 
-1. **Buka folder aplikasi** (biasanya `C:\xampp\htdocs\inventaris`)
-2. **Cari file bernama `start-app.bat`**
-3. **Double-click file tersebut**
-4. **Command Prompt akan terbuka secara otomatis** dengan aplikasi berjalan
-5. **Buka browser** ke: http://localhost:8000
+1. **Letakkan `start-app.bat` di root proyek Laravel** (folder yang sama dengan file `artisan`).
+2. **Double-click `start-app.bat`** — skrip akan menggunakan path file itu sendiri sebagai root proyek.
+3. **Command Prompt akan terbuka dan menjalankan** `php artisan serve`.
+4. **Buka browser** ke: http://localhost:8000
 
 ✅ **Selesai! Aplikasi sudah berjalan!**
 
@@ -32,27 +31,11 @@ Jika ingin membuat shortcut di desktop agar lebih mudah diakses:
 
 ### Troubleshooting Windows
 
-**❌ Masalah: "Folder tidak ditemukan"**
+Jika skrip gagal, periksa hal-hal ini:
 
-File `start-app.bat` tidak tahu di mana folder aplikasinya. Cara perbaiki:
-
-1. **Buka file `start-app.bat` dengan Notepad**
-2. **Cari baris ini:**
-   ```
-   set APP_PATH=C:\xampp\htdocs\inventaris
-   ```
-3. **Ubah path sesuai lokasi aplikasi Anda**, misalnya:
-   ```
-   set APP_PATH=C:\Users\YourName\inventaris
-   ```
-4. **Simpan file (Ctrl+S)**
-5. **Coba double-click lagi**
-
-**❌ Masalah: "PHP not found"**
-
-Artisan PHP tidak terinstall dengan benar. Pastikan:
-- XAMPP sudah terinstall dan berjalan
-- Apache & MySQL sudah di-start di XAMPP Control Panel
+- Pastikan file `start-app.bat` berada di root proyek (sejajar `artisan`).
+- Pastikan `php` ada di PATH atau anda menjalankan skrip dari XAMPP's command prompt.
+- Jika `php` tidak ditemukan, jalankan XAMPP Control Panel dan gunakan PHP yang tersedia di folder XAMPP, atau tambahkan path PHP ke environment variable.
 
 ---
 

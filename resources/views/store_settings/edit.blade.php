@@ -129,6 +129,12 @@
                                 <input type="number" name="receipt_copies" class="form-control" value="{{ old('receipt_copies', $storeSetting->receipt_copies ?? 1) }}" min="1" max="10">
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label">Batas Hari Simpan Struk</label>
+                                <input type="number" name="receipt_retention_days" class="form-control" value="{{ old('receipt_retention_days', $storeSetting->receipt_retention_days ?? 30) }}" min="1" max="3650">
+                                <div class="form-text">Struk lama akan dihapus otomatis setelah melewati batas hari ini.</div>
+                            </div>
+
                             <div class="mb-3 form-check">
                                 <input type="hidden" name="show_receipt_logo" value="0">
                                 <input type="checkbox" name="show_receipt_logo" value="1" class="form-check-input" id="showReceiptLogo" {{ old('show_receipt_logo', $storeSetting->show_receipt_logo) ? 'checked' : '' }}>

@@ -8,23 +8,20 @@ REM Double-click untuk menjalankan
 
 setlocal enabledelayedexpansion
 
-REM Tentukan path aplikasi (sesuaikan jika berbeda)
-set APP_PATH=C:\xampp\htdocs\123\inventory-app-laravel\inventory-app
+REM Change to script directory (assumes the script lives in the project root)
+cd /d "%~dp0"
 
-REM Check apakah folder aplikasi ada
-if not exist "%APP_PATH%" (
+REM Current folder is project root now
+
+REM Check apakah artisan ada
+if not exist "artisan" (
     echo.
-    echo ERROR: Folder aplikasi tidak ditemukan!
-    echo Path yang dicari: %APP_PATH%
-    echo.
-    echo Silakan edit script ini dan ubah APP_PATH sesuai lokasi aplikasi Anda
+    echo ERROR: Tidak menemukan file artisan di folder ini.
+    echo Pastikan Anda menempatkan start-app.bat di root proyek Laravel.
     echo.
     pause
     exit /b 1
 )
-
-REM Change ke folder aplikasi
-cd /d "%APP_PATH%"
 
 REM Clear screen
 cls
@@ -45,7 +42,7 @@ echo.
 echo ========================================
 echo.
 
-REM Jalankan Laravel server
+REM Jalankan Laravel server (port default 8000)
 php artisan serve
 
 REM Jika terjadi error

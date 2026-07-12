@@ -11,7 +11,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Tentukan path aplikasi
+# Tentukan path aplikasi (script directory = project root)
 APP_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo ""
@@ -30,7 +30,7 @@ fi
 # Check apakah artisan file ada
 if [ ! -f "$APP_PATH/artisan" ]; then
     echo -e "${RED}ERROR: File artisan tidak ditemukan!${NC}"
-    echo "Pastikan Anda berada di folder aplikasi yang benar"
+    echo "Pastikan script berada di root proyek Laravel atau jalankan dari folder proyek yang benar."
     exit 1
 fi
 

@@ -103,9 +103,14 @@
                             <strong style="font-size: 1.1rem; color: var(--primary);">Rp {{ number_format($sale->total, 0, ',', '.') }}</strong>
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('sales.show', $sale) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-receipt"></i> Lihat Struk
-                            </a>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary btn-sale-detail" data-sale-id="{{ $sale->id }}">
+                                    <i class="bi bi-info-circle"></i> Detail
+                                </button>
+                                <a href="{{ route('sales.show', $sale) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-receipt"></i> Lihat Struk
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -124,4 +129,61 @@
         {{ $sales->links() }}
     </div>
 </div>
+
+<!-- Modal detail transaksi -->
+<div class="modal fade" id="saleDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Transaksi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="saleDetailModalBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-3">Memuat detail transaksi...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const detailButtons = document.querySelectorAll('.btn-sale-detail');
+        const detailModalEl = document.getElementById('saleDetailModal');
+        const detailModalBody = document.getElementById('saleDetailModalBody');
+        const detailModal = new bootstrap.Modal(detailModalEl);
+
+        detailButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const saleId = button.dataset.saleId;
+                if (!saleId) {
+                    return;
+                }
+
+                detailModalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><div class="mt-3">Memuat detail transaksi...</div></div>';
+                detailModal.show();
+
+                fetch(`{{ url('sales') }}/${saleId}/detail`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('Gagal memuat detail transaksi.');
+                        }
+                        return response.text();
+                    })
+                    .then(function (html) {
+                        detailModalBody.innerHTML = html;
+                    })
+                    .catch(function (error) {
+                        detailModalBody.innerHTML = '<div class="alert alert-danger">' + error.message + '</div>';
+                    });
+            });
+        });
+    });
+</script>
 @endsection

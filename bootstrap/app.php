@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\HandleInstallationPhase;
 use App\Http\Middleware\PreventBackHistoryCache;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,9 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureRole::class,
             'permission' => EnsurePermission::class,
         ]);
-        $middleware->web(append: [
-            PreventBackHistoryCache::class,
-        ]);
+        $middleware->web(prepend: [HandleInstallationPhase::class], append: [PreventBackHistoryCache::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

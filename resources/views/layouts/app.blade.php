@@ -557,6 +557,68 @@
             font-size: 0.9rem;
         }
 
+        /* SIDEBAR TOGGLE */
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+            padding: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            display: flex;
+        }
+
+        .sidebar-toggle:hover {
+            color: var(--primary);
+        }
+
+        /* SIDEBAR COLLAPSED STATE */
+        .sidebar.collapsed {
+            width: 80px !important;
+        }
+
+        .sidebar.collapsed .brand {
+            flex-direction: column;
+            text-align: center;
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar.collapsed .brand img {
+            width: 35px;
+            height: 35px;
+        }
+
+        .sidebar.collapsed .brand span {
+            display: none;
+        }
+
+        .sidebar.collapsed a {
+            justify-content: center;
+            padding: 0.875rem 0.5rem;
+            text-align: center;
+            margin: 0.25rem 0;
+        }
+
+        .sidebar.collapsed a span {
+            display: none;
+        }
+
+        .sidebar.collapsed .menu-label {
+            display: none;
+        }
+
+        .sidebar.collapsed .menu-section {
+            margin-top: 1rem;
+        }
+
+        .sidebar.collapsed hr {
+            margin: 1rem 0;
+        }
+
         /* MOBILE MENU TOGGLE */
         .mobile-menu-toggle {
             display: none;
@@ -588,6 +650,30 @@
 
         .sidebar-overlay.show {
             display: block;
+        }
+
+        /* RESPONSIVE - DESKTOP (992px and up) */
+        @media (min-width: 992px) {
+            .sidebar.collapsed {
+                padding: 1rem 0.5rem !important;
+            }
+
+            .sidebar.collapsed .brand img {
+                margin: 0 auto;
+            }
+
+            .sidebar.collapsed a {
+                margin: 0.25rem auto;
+            }
+
+            .sidebar.collapsed i {
+                font-size: 1.25rem;
+                min-width: unset;
+            }
+
+            .sidebar.collapsed .menu-section {
+                margin-top: 1.5rem;
+            }
         }
 
         /* RESPONSIVE - TABLET (992px and down) */
@@ -1093,7 +1179,7 @@
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="main-wrapper">
     <!-- SIDEBAR MODERN -->
-    <nav class="sidebar p-3" style="width: 280px; flex-shrink: 0;">
+    <nav class="sidebar p-3" id="mainSidebar" style="width: 280px; flex-shrink: 0; transition: width 0.3s ease, padding 0.3s ease;">
         <div class="brand">
             @if(!empty($storeSetting->logo_path))
                 <img src="{{ asset($storeSetting->logo_path) }}" alt="Logo {{ $storeSetting->name }}">
@@ -1216,6 +1302,9 @@
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <button class="mobile-menu-toggle" id="mobileMenuToggle" title="Buka Menu">
                     <i class="bi bi-list"></i>
+                </button>
+                <button class="sidebar-toggle" id="sidebarToggle" title="Sembunyikan Sidebar" style="display: none;">
+                    <i class="bi bi-chevron-left"></i>
                 </button>
                 <h4>
                     @if(request()->routeIs('dashboard'))
@@ -1357,8 +1446,54 @@
 // Mobile menu toggle
 document.addEventListener('DOMContentLoaded', function () {
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mainSidebar = document.getElementById('mainSidebar');
     const sidebar = document.querySelector('nav.sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    // Initialize sidebar toggle button visibility on desktop
+    function updateToggleButtonVisibility() {
+        if (window.innerWidth > 768) {
+            sidebarToggle.style.display = 'flex';
+        } else {
+            sidebarToggle.style.display = 'none';
+        }
+    }
+
+    // Restore sidebar state from localStorage
+    function restoreSidebarState() {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            mainSidebar.classList.add('collapsed');
+            sidebarToggle.innerHTML = '<i class="bi bi-chevron-right"></i>';
+            sidebarToggle.title = 'Tampilkan Sidebar';
+        }
+    }
+
+    // Toggle sidebar collapsed state
+    function toggleCollapsed() {
+        const isCollapsed = mainSidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
+        
+        if (isCollapsed) {
+            sidebarToggle.innerHTML = '<i class="bi bi-chevron-right"></i>';
+            sidebarToggle.title = 'Tampilkan Sidebar';
+        } else {
+            sidebarToggle.innerHTML = '<i class="bi bi-chevron-left"></i>';
+            sidebarToggle.title = 'Sembunyikan Sidebar';
+        }
+    }
+
+    // Initialize sidebar toggle
+    updateToggleButtonVisibility();
+    restoreSidebarState();
+    
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleCollapsed);
+    }
+
+    // Update toggle button visibility on window resize
+    window.addEventListener('resize', updateToggleButtonVisibility);
 
     function closeSidebar() {
         sidebar.classList.remove('show');
@@ -1370,7 +1505,7 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebarOverlay.classList.toggle('show');
     }
 
-    // Toggle menu button
+    // Toggle menu button (mobile)
     if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', function (e) {
             e.stopPropagation();

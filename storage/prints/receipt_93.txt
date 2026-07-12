@@ -1,0 +1,15 @@
+--- Struk Belanja (80MM) ---
+*** SIMULASI ***
+[Logo: store-logo-1783568448.png]
+Toko Accesorie
+Jln.Garuda Ujung No.EE 4
+Tanggal: 2026-07-12 01:09:22
+No. Nota: INV-20260712-0049
+Keterangan: Cetak simulasi
+-----------------------------------
+Baju12                     x1     20.000
+baju2                      x1     20.000
+-----------------------------------
+Total: 40.000
+-----------------------------------
+Terima kasih atas kunjungan Anda!

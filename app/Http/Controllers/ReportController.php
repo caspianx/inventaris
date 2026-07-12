@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Item;
+use App\Models\Sale;
 use App\Models\Supplier;
 use App\Services\Code128BarcodeGenerator;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -18,21 +20,58 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ReportController extends Controller
 {
-    private const SUPPORTED_TYPES = ['items', 'categories', 'suppliers', 'purchase_orders'];
+    private const SUPPORTED_EXPORT_TYPES = ['items', 'categories', 'suppliers', 'purchase_orders', 'income', 'expense'];
+    private const SUPPORTED_IMPORT_TYPES = ['items', 'categories', 'suppliers'];
+    private const SUPPORTED_FINANCIAL_TYPES = ['income', 'expense'];
+    private const SUPPORTED_FINANCIAL_PERIODS = ['day', 'month', 'year'];
 
-    public function index()
+    public function index(Request $request)
     {
-        return view('reports.index');
+        $reportType = $request->query('report', 'income');
+        $period = $request->query('period', 'day');
+        $selectedDate = $request->query('date', now()->format('Y-m-d'));
+        $selectedMonth = $request->query('month', now()->format('Y-m'));
+        $selectedYear = $request->query('year', now()->format('Y'));
+
+        $financialReports = null;
+        $financialTotal = 0;
+        $financialTitle = null;
+        $financialTableType = null;
+        $financialSummary = ['revenue' => 0, 'cost' => 0, 'margin' => 0];
+
+        if (in_array($reportType, self::SUPPORTED_FINANCIAL_TYPES, true) && in_array($period, self::SUPPORTED_FINANCIAL_PERIODS, true)) {
+            [$financialReports, $financialTotal, $financialTitle, $financialTableType, $financialSummary] = $this->getFinancialReportData(
+                $reportType,
+                $period,
+                $selectedDate,
+                $selectedMonth,
+                $selectedYear
+            );
+        }
+
+        return view('reports.index', compact(
+            'reportType',
+            'period',
+            'selectedDate',
+            'selectedMonth',
+            'selectedYear',
+            'financialReports',
+            'financialTotal',
+            'financialTitle',
+            'financialTableType',
+            'financialSummary'
+        ));
     }
 
-    public function export(string $type)
+    public function export(Request $request, string $type)
     {
-        if (! in_array($type, self::SUPPORTED_TYPES, true)) {
+        if (! in_array($type, self::SUPPORTED_EXPORT_TYPES, true)) {
             return redirect()->route('reports.index')->with('error', 'Tipe laporan tidak dikenal.');
         }
 
         $filename = sprintf('laporan_%s_%s.xlsx', $type, now()->format('Ymd_His'));
         $rows = [];
+        $rowStyles = [];
 
         if ($type === 'items') {
             $rows[] = ['SKU', 'Nama', 'Kategori', 'Satuan', 'Harga Beli', 'Harga Jual', 'Stok Min', 'Deskripsi'];
@@ -85,6 +124,10 @@ class ReportController extends Controller
             }
         }
 
+        if (in_array($type, self::SUPPORTED_FINANCIAL_TYPES, true)) {
+            $this->addFinancialExportRows($request, $type, $rows, $rowStyles);
+        }
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -92,6 +135,29 @@ class ReportController extends Controller
             foreach (array_values($row) as $colIndex => $value) {
                 $cellCoordinate = Coordinate::stringFromColumnIndex($colIndex + 1).($rowIndex + 1);
                 $sheet->setCellValue($cellCoordinate, $value);
+            }
+        }
+
+        foreach ($rowStyles as $rowIndex => $style) {
+            $rowNum = $rowIndex + 1;
+            $lastColumn = Coordinate::stringFromColumnIndex(count($rows[$rowIndex]));
+
+            if ($style === 'header' || $style === 'detail-header') {
+                $sheet->getStyle("A{$rowNum}:{$lastColumn}{$rowNum}")
+                    ->applyFromArray([
+                        'font' => ['bold' => true],
+                        'fill' => [
+                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => $style === 'header' ? 'DDEBF7' : 'F8F9FA'],
+                        ],
+                    ]);
+            }
+
+            if ($style === 'detail-row') {
+                $firstDetailColumn = Coordinate::stringFromColumnIndex(3);
+                $sheet->getStyle("{$firstDetailColumn}{$rowNum}:{$lastColumn}{$rowNum}")
+                    ->getAlignment()
+                    ->setIndent(1);
             }
         }
 
@@ -109,9 +175,150 @@ class ReportController extends Controller
         ]);
     }
 
+    private function addFinancialExportRows(Request $request, string $type, array &$rows, array &$rowStyles): void
+    {
+        if ($type === 'income') {
+            $rows[] = ['No. Invoice', 'Tanggal', 'Kasir', 'Metode Pembayaran', 'Total Penjualan', 'Total Biaya', 'Pendapatan Bersih', 'Margin %', 'Catatan'];
+            $rowStyles[] = 'header';
+        } else {
+            $rows[] = ['No. PO', 'Tanggal Order', 'Supplier', 'Status', 'Total', 'Catatan', ''];
+            $rowStyles[] = 'header';
+        }
+
+        [$start, $end] = $this->resolveFinancialReportDateRange(
+            $request->query('period', 'day'),
+            $request->query('date', now()->format('Y-m-d')),
+            $request->query('month', now()->format('Y-m')),
+            $request->query('year', now()->format('Y'))
+        );
+
+        if ($type === 'income') {
+            $query = Sale::with(['user', 'items.item'])->orderBy('created_at');
+            $query->whereBetween('created_at', [$start, $end]);
+
+            foreach ($query->cursor() as $sale) {
+                $revenue = $sale->total;
+                $cost = $this->calculateSaleCost($sale);
+                $profit = $this->calculateSaleProfit($sale);
+                $margin = $revenue > 0 ? ($profit / $revenue) * 100 : 0;
+
+                $rows[] = [
+                    trim($sale->invoice_number),
+                    $sale->created_at->format('Y-m-d H:i:s'),
+                    trim($sale->user?->name ?? '-'),
+                    trim($sale->payment_method),
+                    number_format($revenue, 2, '.', ''),
+                    number_format($cost, 2, '.', ''),
+                    number_format($profit, 2, '.', ''),
+                    number_format($margin, 2, '.', ''),
+                    trim($sale->notes),
+                ];
+            }
+        } else {
+            $query = \App\Models\PurchaseOrder::with(['supplier', 'items.item'])->orderBy('order_date');
+            $query->whereBetween('order_date', [$start->toDateString(), $end->toDateString()]);
+
+            foreach ($query->cursor() as $purchaseOrder) {
+                $rows[] = [
+                    trim($purchaseOrder->po_number),
+                    optional($purchaseOrder->order_date)->format('Y-m-d') ?? '',
+                    trim($purchaseOrder->supplier?->name ?? '-'),
+                    trim($purchaseOrder->status),
+                    number_format($purchaseOrder->total_amount, 2, '.', ''),
+                    trim($purchaseOrder->notes),
+                    '',
+                ];
+                $rowStyles[] = 'normal';
+
+                $rows[] = ['', '', 'Item', 'Harga Satuan', 'Jumlah', 'Subtotal', ''];
+                $rowStyles[] = 'detail-header';
+
+                foreach ($purchaseOrder->items as $item) {
+                    $rows[] = [
+                        '',
+                        '',
+                        trim($item->item?->name ?? 'Item tidak diketahui'),
+                        number_format($item->price, 2, '.', ''),
+                        $item->quantity,
+                        number_format($item->subtotal, 2, '.', ''),
+                        '',
+                    ];
+                    $rowStyles[] = 'detail-row';
+                }
+            }
+        }
+    }
+
+    private function getFinancialReportData(string $type, string $period, string $date, string $month, string $year): array
+    {
+        [$start, $end, $label] = $this->resolveFinancialReportDateRange($period, $date, $month, $year);
+
+        if ($type === 'income') {
+            $query = Sale::with(['user', 'items.item'])->orderBy('created_at', 'desc');
+            $reports = $query->whereBetween('created_at', [$start, $end])->get();
+            $revenue = $reports->sum('total');
+            $cost = $reports->sum(fn (Sale $sale) => $this->calculateSaleCost($sale));
+            $profit = $reports->sum(fn (Sale $sale) => $this->calculateSaleProfit($sale));
+            $margin = $revenue > 0 ? ($profit / $revenue) * 100 : 0;
+            return [$reports, $profit, 'Laporan Pendapatan Bersih - '.$label, 'income', [
+                'revenue' => $revenue,
+                'cost' => $cost,
+                'margin' => $margin,
+            ]];
+        }
+
+        $query = \App\Models\PurchaseOrder::with('supplier')->orderBy('order_date', 'desc');
+        $reports = $query->whereBetween('order_date', [$start->toDateString(), $end->toDateString()])->get();
+        $total = $reports->sum('total_amount');
+        return [$reports, $total, 'Laporan Pengeluaran - '.$label, 'expense', [
+            'revenue' => 0,
+            'cost' => 0,
+            'margin' => 0,
+        ]];
+    }
+
+    private function calculateSaleCost(Sale $sale): float
+    {
+        return $sale->items->sum(function ($item) {
+            return ($item->item?->purchase_price ?? 0) * $item->quantity;
+        });
+    }
+
+    private function resolveFinancialReportDateRange(string $period, string $date, string $month, string $year): array
+    {
+        try {
+            if ($period === 'day') {
+                $start = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
+                $end = Carbon::createFromFormat('Y-m-d', $date)->endOfDay();
+                return [$start, $end, $start->format('d M Y')];
+            }
+
+            if ($period === 'month') {
+                $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+                $end = $start->copy()->endOfMonth();
+                return [$start, $end, $start->format('F Y')];
+            }
+
+            $start = Carbon::createFromFormat('Y', $year)->startOfYear();
+            $end = $start->copy()->endOfYear();
+            return [$start, $end, $start->format('Y')];
+        } catch (\Throwable $e) {
+            $today = Carbon::today();
+            return [$today->startOfDay(), $today->endOfDay(), $today->format('d M Y')];
+        }
+    }
+
+    private function calculateSaleProfit(Sale $sale): float
+    {
+        return $sale->items->sum(function ($item) {
+            $purchasePrice = $item->item?->purchase_price ?? 0;
+            return ($item->price - $purchasePrice) * $item->quantity;
+        });
+    }
+
     public function import(Request $request, string $type)
     {
-        if (! in_array($type, self::SUPPORTED_TYPES, true)) {
+        if (! in_array($type, self::SUPPORTED_IMPORT_TYPES, true)) {
             return redirect()->route('reports.index')->with('error', 'Tipe import tidak dikenal.');
         }
 

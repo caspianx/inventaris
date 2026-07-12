@@ -106,6 +106,7 @@ class StoreSettingController extends Controller
             'auto_print_receipt' => ['nullable', 'boolean'],
             'receipt_copies' => ['nullable', 'integer', 'min:1', 'max:10'],
             'receipt_size' => ['nullable', 'in:58mm,80mm,roll'],
+            'receipt_retention_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
             'show_receipt_logo' => ['nullable', 'boolean'],
             'receipt_header_title' => ['nullable', 'string', 'max:255'],
             'receipt_header_subtitle' => ['nullable', 'string', 'max:255'],
@@ -158,6 +159,9 @@ class StoreSettingController extends Controller
         }
         if ($request->has('receipt_size')) {
             $data['receipt_size'] = $validated['receipt_size'] ?? $storeSetting->receipt_size ?? '80mm';
+        }
+        if ($request->has('receipt_retention_days')) {
+            $data['receipt_retention_days'] = $validated['receipt_retention_days'] ?? $storeSetting->receipt_retention_days ?? 30;
         }
         if ($request->has('show_receipt_logo')) {
             $data['show_receipt_logo'] = $request->boolean('show_receipt_logo');
@@ -234,15 +238,13 @@ class StoreSettingController extends Controller
             $data['cash_drawer_address'] = $validated['cash_drawer_address'] ?? $storeSetting->cash_drawer_address ?? null;
         }
 
-        if ($request->boolean('remove_logo') && $storeSetting->logo_path) {
-            File::delete(public_path($storeSetting->logo_path));
+        if ($request->boolean('remove_logo')) {
+            $this->deleteStoreLogoFiles($storeSetting->logo_path);
             $data['logo_path'] = null;
         }
 
         if ($request->hasFile('logo')) {
-            if ($storeSetting->logo_path) {
-                File::delete(public_path($storeSetting->logo_path));
-            }
+            $this->deleteStoreLogoFiles($storeSetting->logo_path);
 
             $directory = public_path('store-logos');
 
@@ -251,8 +253,25 @@ class StoreSettingController extends Controller
             }
 
             $file = $request->file('logo');
-            $filename = 'store-logo-'.time().'.'.$file->getClientOriginalExtension();
-            $file->move($directory, $filename);
+            $extension = $file->getClientOriginalExtension() ?: 'png';
+            $filename = 'store-logo.'.$extension;
+            $targetPath = $directory.'/'.$filename;
+
+            if (File::exists($targetPath)) {
+                File::delete($targetPath);
+            }
+
+            $stream = fopen($file->getRealPath(), 'rb');
+            if ($stream !== false) {
+                $written = file_put_contents($targetPath, $stream);
+                fclose($stream);
+
+                if ($written === false) {
+                    throw new \RuntimeException('Gagal menulis file logo toko.');
+                }
+            } else {
+                throw new \RuntimeException('Gagal membaca file logo toko.');
+            }
 
             $data['logo_path'] = 'store-logos/'.$filename;
         }
@@ -260,6 +279,22 @@ class StoreSettingController extends Controller
         $storeSetting->update($data);
 
         return redirect()->route('store-settings.edit')->with('success', 'Pengaturan toko berhasil diperbarui.');
+    }
+
+    protected function deleteStoreLogoFiles(?string $currentLogoPath = null): void
+    {
+        if ($currentLogoPath) {
+            File::delete(public_path($currentLogoPath));
+        }
+
+        $directory = public_path('store-logos');
+        if (! File::exists($directory)) {
+            return;
+        }
+
+        foreach (File::glob($directory.'/store-logo*') as $logoFile) {
+            File::delete($logoFile);
+        }
     }
 
     public function simulatePrint(Request $request)

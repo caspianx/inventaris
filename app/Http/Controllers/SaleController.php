@@ -138,12 +138,12 @@ class SaleController extends Controller
 
         try {
             $store = StoreSetting::current();
-            if ($store->auto_print_receipt || $printReceiptRequested) {
-                if (method_exists(PrintReceipt::class, 'dispatchSync')) {
-                    PrintReceipt::dispatchSync($sale, $printReceiptRequested);
-                } else {
-                    PrintReceipt::dispatch($sale, $printReceiptRequested)->onConnection('sync');
-                }
+            $shouldPrintToDevice = $store->auto_print_receipt || $printReceiptRequested;
+
+            if (method_exists(PrintReceipt::class, 'dispatchSync')) {
+                PrintReceipt::dispatchSync($sale, false, $shouldPrintToDevice);
+            } else {
+                PrintReceipt::dispatch($sale, false, $shouldPrintToDevice)->onConnection('sync');
             }
         } catch (\Throwable $e) {
             $printError = $e->getMessage();
@@ -181,6 +181,13 @@ class SaleController extends Controller
     /**
      * Halaman struk (bisa dicetak).
      */
+    public function detail(Sale $sale)
+    {
+        $sale->load(['items', 'user']);
+
+        return view('sales.modal_detail', compact('sale'));
+    }
+
     public function show(Sale $sale)
     {
         $sale->load(['items', 'user']);

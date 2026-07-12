@@ -2,6 +2,19 @@
 
 use Illuminate\Support\Str;
 
+function isInstallationPhase(): bool
+{
+    $connection = env('DB_CONNECTION', 'sqlite');
+    $database = env('DB_DATABASE', '');
+    $username = env('DB_USERNAME', '');
+
+    if ($connection === 'sqlite') {
+        return empty($database);
+    }
+
+    return empty($database) || empty($username);
+}
+
 return [
 
     /*
@@ -18,7 +31,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => isInstallationPhase() ? 'file' : env('SESSION_DRIVER', 'database'),
 
     /*
     |--------------------------------------------------------------------------

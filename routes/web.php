@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\InstallController;
 use App\Http\Controllers\PrintFileController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\RoleController;
@@ -15,9 +16,24 @@ use App\Http\Controllers\StoreSettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', [InstallController::class, 'show']);
+
+Route::get('/install', [App\Http\Controllers\InstallController::class, 'show'])
+    ->name('install');
+Route::post('/install', [App\Http\Controllers\InstallController::class, 'store'])
+    ->name('install.store')
+    ->withoutMiddleware([ValidateCsrfToken::class]);
+Route::post('/install/setup', [App\Http\Controllers\InstallController::class, 'setup'])
+    ->name('install.setup')
+    ->withoutMiddleware([ValidateCsrfToken::class]);
+
+Route::get('/install/migrate-existing', [App\Http\Controllers\InstallController::class, 'showMigrateExisting'])
+    ->name('install.migrate');
+Route::post('/install/migrate-existing/run', [App\Http\Controllers\InstallController::class, 'runMigrations'])
+    ->name('install.migrate.run');
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -32,6 +48,9 @@ Route::middleware('auth')->group(function () {
     Route::view('/no-access', 'no_access')->name('no-access');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')
+        ->middleware('permission:dashboard.view');
+    Route::get('/dashboard/income-trend-data', [DashboardController::class, 'incomeTrendData'])
+        ->name('dashboard.income-trend-data')
         ->middleware('permission:dashboard.view');
 
     Route::resource('stock-movements', StockMovementController::class)
@@ -61,6 +80,10 @@ Route::middleware('auth')->group(function () {
         ->middlewareFor('index', 'permission:sales.view')
         ->middlewareFor(['create', 'store'], 'permission:sales.create')
         ->middlewareFor('show', 'permission:sales.view,sales.create');
+
+    Route::get('/sales/{sale}/detail', [SaleController::class, 'detail'])
+        ->name('sales.detail')
+        ->middleware('permission:sales.view,sales.create');
 
     Route::resource('items', ItemController::class)
         ->only(['index', 'create', 'store'])

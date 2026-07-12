@@ -52,7 +52,7 @@ class PurchaseOrderController extends Controller
             }
 
             $po = PurchaseOrder::create([
-                'po_number' => 'PO-'.now()->format('Ymd').'-'.str_pad((PurchaseOrder::count() + 1), 4, '0', STR_PAD_LEFT),
+                'po_number' => 'PO-'.now()->format('Ymd').'-'.str_pad((string) (PurchaseOrder::count() + 1), 4, '0', STR_PAD_LEFT),
                 'supplier_id' => $validated['supplier_id'],
                 'user_id' => $request->user()->id,
                 'status' => 'draft',
