@@ -27,3 +27,34 @@ php artisan serve
 Untuk panduan menjalankan skrip auto-start, lihat `START-APP.md`.
 
 Lisensi: MIT
+
+**Keamanan & APP_KEY**
+
+- Jangan commit `/.env` atau nilai `APP_KEY` ke repositori publik.
+- Setelah clone, salin `.env.example` ke `.env`, install dependensi, lalu generate key:
+
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+```
+
+- Jika menggunakan PowerShell (Windows):
+
+```powershell
+Copy-Item .env.example .env
+composer install
+php artisan key:generate
+```
+
+**Otomatisasi (opsional)**
+
+Untuk otomatis generate `APP_KEY` saat `composer install`, tambahkan ke bagian `scripts` pada `composer.json`:
+
+```json
+"post-install-cmd": [
+	"@php artisan key:generate --ansi"
+]
+```
+
+Catatan: pastikan file `.env` sudah dibuat (mis. dengan menyalin `.env.example`) sebelum menjalankan skrip ini.
