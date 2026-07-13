@@ -71,7 +71,7 @@
                             <td class="text-end">
                                 <a href="{{ route('print-files.download', $file->filename) }}" class="btn btn-sm btn-outline-primary">Unduh</a>
                                 @if($file->sale)
-                                    <a href="{{ route('print-files.reprint', $file->sale->id) }}" class="btn btn-sm btn-secondary">Cetak Ulang</a>
+                                    <a href="{{ route('print-files.reprint', $file->sale->id) }}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Preview Struk</a>
                                 @endif
                                 <button type="button" class="btn btn-sm btn-danger" onclick="confirmSingleDelete('{{ route('print-files.destroy', $file) }}')">Hapus</button>
                             </td>

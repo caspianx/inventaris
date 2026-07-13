@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\PrintFile;
-use App\Models\Sale;
 use App\Models\StoreSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -18,13 +17,13 @@ class PrintReceipt implements ShouldQueue
 
     public int $tries = 3;
 
-    protected Sale $sale;
+    protected object $sale;
 
     protected bool $simulate;
 
     protected bool $printToDevice;
 
-    public function __construct(Sale $sale, bool $simulate = false, bool $printToDevice = false)
+    public function __construct(object $sale, bool $simulate = false, bool $printToDevice = false)
     {
         $this->sale = $sale;
         $this->simulate = $simulate;
@@ -47,33 +46,47 @@ class PrintReceipt implements ShouldQueue
             mkdir($dir, 0755, true);
         }
 
-        $txtFilename = 'receipt_'.$this->sale->id.'.txt';
-        $htmlFilename = 'receipt_'.$this->sale->id.'.html';
+        $saleId = $this->sale->id ?? 'simulated';
+        $txtFilename = 'receipt_'.$saleId.'.txt';
+        $htmlFilename = 'receipt_'.$saleId.'.html';
 
         file_put_contents($dir.DIRECTORY_SEPARATOR.$txtFilename, $textContent);
         file_put_contents($dir.DIRECTORY_SEPARATOR.$htmlFilename, $htmlContent);
 
         $printedToDevice = false;
-        if (! $this->simulate && $this->printToDevice && ! empty($printer)) {
-            $printedToDevice = $this->sendToPrinter($dir.DIRECTORY_SEPARATOR.$txtFilename, $printer, $copies);
+        if ($this->printToDevice && ! empty($printer)) {
+            $printedToDevice = self::sendToPrinter($dir.DIRECTORY_SEPARATOR.$txtFilename, $printer, $copies);
+            if (! $printedToDevice) {
+                throw new \RuntimeException('Printing to printer "'.$printer.'" failed.');
+            }
         }
 
-        $printFile = PrintFile::firstOrNew(['sale_id' => $this->sale->id]);
-        $printFile->filename = $htmlFilename;
-        $printFile->printer_name = $printer;
-        $printFile->last_printed_at = now();
-        $printFile->print_count = $printFile->exists ? $printFile->print_count + 1 : 1;
-        $printFile->save();
+        if (! $this->simulate) {
+            $printFile = PrintFile::firstOrNew(['sale_id' => $this->sale->id]);
+            $printFile->filename = $htmlFilename;
+            $printFile->printer_name = $printer;
+            $printFile->last_printed_at = now();
+            $printFile->print_count = $printFile->exists ? $printFile->print_count + 1 : 1;
+            $printFile->save();
 
-        Log::info(sprintf(
-            'PrintReceipt: wrote receipts to %s and %s (printer=%s, copies=%d, printed_to_device=%s, count=%d)',
-            $txtFilename,
-            $htmlFilename,
-            $printer ?? 'none',
-            $copies,
-            $printedToDevice ? 'yes' : 'no',
-            $printFile->print_count
-        ));
+            Log::info(sprintf(
+                'PrintReceipt: wrote receipts to %s and %s (printer=%s, copies=%d, printed_to_device=%s, count=%d)',
+                $txtFilename,
+                $htmlFilename,
+                $printer ?? 'none',
+                $copies,
+                $printedToDevice ? 'yes' : 'no',
+                $printFile->print_count
+            ));
+        } else {
+            Log::info(sprintf(
+                'PrintReceipt simulation: wrote receipts to %s and %s (simulated, printer=%s, copies=%d)',
+                $txtFilename,
+                $htmlFilename,
+                $printer ?? 'none',
+                $copies
+            ));
+        }
     }
 
     protected function buildTextReceipt(StoreSetting $store, string $receiptSize): string
@@ -157,8 +170,6 @@ class PrintReceipt implements ShouldQueue
 
     protected function buildHtmlReceipt(StoreSetting $store): string
     {
-        $this->sale->loadMissing(['items', 'user']);
-
         $logoDataUri = null;
         if ($store->show_receipt_logo && $store->logo_path) {
             $logoFile = public_path($store->logo_path);
@@ -176,7 +187,7 @@ class PrintReceipt implements ShouldQueue
         ])->render();
     }
 
-    protected function sendToPrinter(string $filename, string $printer, int $copies): bool
+    public static function sendToPrinter(string $filename, string $printer, int $copies): bool
     {
         $printed = false;
 

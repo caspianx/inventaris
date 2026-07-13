@@ -61,15 +61,15 @@ class PrintFileController extends Controller
     {
         try {
             if (method_exists(PrintReceipt::class, 'dispatchSync')) {
-                PrintReceipt::dispatchSync($sale);
+                PrintReceipt::dispatchSync($sale, false, false);
             } else {
-                PrintReceipt::dispatch($sale)->onConnection('sync');
+                PrintReceipt::dispatch($sale, false, false)->onConnection('sync');
             }
-
-            return redirect()->route('print-files.index')->with('success', 'Cetak ulang struk telah diproses.');
         } catch (\Throwable $e) {
-            return redirect()->route('print-files.index')->with('error', 'Gagal mencetak ulang: '.$e->getMessage());
+            return redirect()->route('print-files.index')->with('error', 'Gagal memproses ulang struk: '.$e->getMessage());
         }
+
+        return redirect()->route('sales.show', ['sale' => $sale->id, 'print' => 1]);
     }
 
     public function destroy(PrintFile $printFile)

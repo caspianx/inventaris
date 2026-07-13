@@ -3,14 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\PrintReceipt;
-use App\Models\Item;
 use App\Models\PrintFile;
-use App\Models\Sale;
-use App\Models\StockMovement;
 use App\Models\StoreSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class StoreSettingController extends Controller
@@ -140,102 +136,63 @@ class StoreSettingController extends Controller
         // subforms that only include a subset of fields.
         $data = [];
 
-        if ($request->has('name')) {
-            $data['name'] = $validated['name'] ?? $storeSetting->name;
-        }
-        if ($request->has('address')) {
-            $data['address'] = $validated['address'] ?? $storeSetting->address;
-        }
+        // Field configuration for conditional updates
+        $fieldConfig = [
+            // Basic settings
+            'name' => ['type' => 'string', 'fallback' => 'name'],
+            'address' => ['type' => 'string', 'fallback' => 'address'],
+            
+            // Print settings
+            'default_printer' => ['type' => 'string', 'fallback' => null],
+            'auto_print_receipt' => ['type' => 'boolean'],
+            'receipt_copies' => ['type' => 'int', 'fallback' => 'receipt_copies', 'default' => 1],
+            'receipt_size' => ['type' => 'string', 'fallback' => 'receipt_size', 'default' => '80mm'],
+            'receipt_retention_days' => ['type' => 'int', 'fallback' => 'receipt_retention_days', 'default' => 30],
+            'show_receipt_logo' => ['type' => 'boolean'],
+            
+            // Receipt header settings
+            'receipt_header_title' => ['type' => 'string', 'fallback' => null],
+            'receipt_header_subtitle' => ['type' => 'string', 'fallback' => null],
+            'receipt_header_extra' => ['type' => 'string', 'fallback' => null],
+            
+            // Receipt transaction display
+            'receipt_show_invoice_number' => ['type' => 'boolean'],
+            'receipt_show_date_time' => ['type' => 'boolean'],
+            'receipt_show_cashier' => ['type' => 'boolean'],
+            'receipt_cashier_label' => ['type' => 'string', 'fallback' => 'receipt_cashier_label', 'default' => 'Kasir'],
+            'receipt_show_table' => ['type' => 'boolean'],
+            'receipt_table_label' => ['type' => 'string', 'fallback' => 'receipt_table_label', 'default' => 'Tabel'],
+            
+            // Tax settings
+            'receipt_show_tax_line' => ['type' => 'boolean'],
+            'receipt_tax_label' => ['type' => 'string', 'fallback' => 'receipt_tax_label', 'default' => 'Pajak'],
+            'receipt_tax_rate' => ['type' => 'numeric', 'fallback' => 'receipt_tax_rate', 'default' => 0],
+            
+            // Payment settings
+            'receipt_show_payment_method' => ['type' => 'boolean'],
+            'receipt_payment_label' => ['type' => 'string', 'fallback' => 'receipt_payment_label', 'default' => 'Bayar'],
+            'receipt_change_label' => ['type' => 'string', 'fallback' => 'receipt_change_label', 'default' => 'Kembalian'],
+            
+            // Item display columns
+            'receipt_show_item_sku' => ['type' => 'boolean'],
+            'receipt_show_item_quantity' => ['type' => 'boolean'],
+            'receipt_show_item_price' => ['type' => 'boolean'],
+            'receipt_show_item_subtotal' => ['type' => 'boolean'],
+            
+            // Receipt footer
+            'receipt_thank_you_text' => ['type' => 'string', 'fallback' => 'receipt_thank_you_text', 'default' => 'Terima kasih atas kunjungan Anda!'],
+            'receipt_footer_note' => ['type' => 'string', 'fallback' => null],
+            
+            // Cash drawer settings
+            'cash_drawer_driver' => ['type' => 'string', 'fallback' => 'cash_drawer_driver', 'default' => 'network'],
+            'cash_drawer_address' => ['type' => 'string', 'fallback' => null],
+        ];
 
-        // Print settings (only set when present in request)
-        if ($request->has('default_printer')) {
-            $data['default_printer'] = $validated['default_printer'] ?? null;
-        }
-        if ($request->has('auto_print_receipt')) {
-            $data['auto_print_receipt'] = $request->boolean('auto_print_receipt');
-        }
-        if ($request->has('receipt_copies')) {
-            $data['receipt_copies'] = $validated['receipt_copies'] ?? $storeSetting->receipt_copies ?? 1;
-        }
-        if ($request->has('receipt_size')) {
-            $data['receipt_size'] = $validated['receipt_size'] ?? $storeSetting->receipt_size ?? '80mm';
-        }
-        if ($request->has('receipt_retention_days')) {
-            $data['receipt_retention_days'] = $validated['receipt_retention_days'] ?? $storeSetting->receipt_retention_days ?? 30;
-        }
-        if ($request->has('show_receipt_logo')) {
-            $data['show_receipt_logo'] = $request->boolean('show_receipt_logo');
-        }
-        if ($request->has('receipt_header_title')) {
-            $data['receipt_header_title'] = $validated['receipt_header_title'] ?? null;
-        }
-        if ($request->has('receipt_header_subtitle')) {
-            $data['receipt_header_subtitle'] = $validated['receipt_header_subtitle'] ?? null;
-        }
-        if ($request->has('receipt_header_extra')) {
-            $data['receipt_header_extra'] = $validated['receipt_header_extra'] ?? null;
-        }
-        if ($request->has('receipt_show_invoice_number')) {
-            $data['receipt_show_invoice_number'] = $request->boolean('receipt_show_invoice_number');
-        }
-        if ($request->has('receipt_show_date_time')) {
-            $data['receipt_show_date_time'] = $request->boolean('receipt_show_date_time');
-        }
-        if ($request->has('receipt_show_cashier')) {
-            $data['receipt_show_cashier'] = $request->boolean('receipt_show_cashier');
-        }
-        if ($request->has('receipt_cashier_label')) {
-            $data['receipt_cashier_label'] = $validated['receipt_cashier_label'] ?? $storeSetting->receipt_cashier_label ?? 'Kasir';
-        }
-        if ($request->has('receipt_show_table')) {
-            $data['receipt_show_table'] = $request->boolean('receipt_show_table');
-        }
-        if ($request->has('receipt_table_label')) {
-            $data['receipt_table_label'] = $validated['receipt_table_label'] ?? $storeSetting->receipt_table_label ?? 'Tabel';
-        }
-        if ($request->has('receipt_show_tax_line')) {
-            $data['receipt_show_tax_line'] = $request->boolean('receipt_show_tax_line');
-        }
-        if ($request->has('receipt_tax_label')) {
-            $data['receipt_tax_label'] = $validated['receipt_tax_label'] ?? $storeSetting->receipt_tax_label ?? 'Pajak';
-        }
-        if ($request->has('receipt_tax_rate')) {
-            $data['receipt_tax_rate'] = $validated['receipt_tax_rate'] ?? $storeSetting->receipt_tax_rate ?? 0;
-        }
-        if ($request->has('receipt_show_payment_method')) {
-            $data['receipt_show_payment_method'] = $request->boolean('receipt_show_payment_method');
-        }
-        if ($request->has('receipt_payment_label')) {
-            $data['receipt_payment_label'] = $validated['receipt_payment_label'] ?? $storeSetting->receipt_payment_label ?? 'Bayar';
-        }
-        if ($request->has('receipt_change_label')) {
-            $data['receipt_change_label'] = $validated['receipt_change_label'] ?? $storeSetting->receipt_change_label ?? 'Kembalian';
-        }
-        if ($request->has('receipt_show_item_sku')) {
-            $data['receipt_show_item_sku'] = $request->boolean('receipt_show_item_sku');
-        }
-        if ($request->has('receipt_show_item_quantity')) {
-            $data['receipt_show_item_quantity'] = $request->boolean('receipt_show_item_quantity');
-        }
-        if ($request->has('receipt_show_item_price')) {
-            $data['receipt_show_item_price'] = $request->boolean('receipt_show_item_price');
-        }
-        if ($request->has('receipt_show_item_subtotal')) {
-            $data['receipt_show_item_subtotal'] = $request->boolean('receipt_show_item_subtotal');
-        }
-        if ($request->has('receipt_thank_you_text')) {
-            $data['receipt_thank_you_text'] = $validated['receipt_thank_you_text'] ?? $storeSetting->receipt_thank_you_text ?? 'Terima kasih atas kunjungan Anda!';
-        }
-        if ($request->has('receipt_footer_note')) {
-            $data['receipt_footer_note'] = $validated['receipt_footer_note'] ?? null;
-        }
-
-        // Cash drawer settings
-        if ($request->has('cash_drawer_driver')) {
-            $data['cash_drawer_driver'] = $validated['cash_drawer_driver'] ?? $storeSetting->cash_drawer_driver ?? 'network';
-        }
-        if ($request->has('cash_drawer_address')) {
-            $data['cash_drawer_address'] = $validated['cash_drawer_address'] ?? $storeSetting->cash_drawer_address ?? null;
+        // Process conditional field updates
+        foreach ($fieldConfig as $field => $config) {
+            if ($request->has($field)) {
+                $data[$field] = $this->getFieldValue($request, $validated, $storeSetting, $field, $config);
+            }
         }
 
         if ($request->boolean('remove_logo')) {
@@ -300,92 +257,77 @@ class StoreSettingController extends Controller
     public function simulatePrint(Request $request)
     {
         $validated = $request->validate([
-            'printer' => ['required', 'string', 'max:255'],
+            'printer' => ['nullable', 'string', 'max:255'],
             'copies' => ['required', 'integer', 'min:1', 'max:10'],
         ]);
 
-        $printer = $validated['printer'];
-        $copies = $validated['copies'];
-
         $storeSetting = StoreSetting::current();
-        $storeSetting->update([
-            'default_printer' => $printer,
-            'auto_print_receipt' => true,
-            'receipt_copies' => $copies,
-        ]);
+        $printer = $validated['printer'] ?: $storeSetting->default_printer;
 
-        $item = Item::where('current_stock', '>', 0)->first();
-        if (! $item) {
+        if (! $printer) {
             return redirect()->route('store-settings.edit')
-                ->with('error', 'Tidak ada item dengan stok positif untuk disimulasikan.');
+                ->with('error', 'Nama printer belum dikonfigurasi. Silakan atur printer default di Pengaturan Print Struk.');
         }
 
-        $sale = DB::transaction(function () use ($item) {
-            $sale = Sale::create([
-                'invoice_number' => 'SIM-'.now()->format('YmdHis'),
-                'user_id' => Auth::id() ?? 1,
-                'subtotal' => $item->selling_price,
-                'discount' => 0,
-                'total' => $item->selling_price,
-                'payment_method' => 'cash',
-                'paid_amount' => $item->selling_price,
-                'change_amount' => 0,
-                'notes' => 'Simulated sale for web test',
-            ]);
+        $storeSetting->default_printer = $printer;
+        $storeSetting->receipt_copies = $validated['copies'];
+        $storeSetting->save();
 
-            $sale->items()->create([
-                'item_id' => $item->id,
-                'item_name' => $item->name,
-                'item_sku' => $item->sku,
-                'price' => $item->selling_price,
-                'quantity' => 1,
-                'subtotal' => $item->selling_price,
-            ]);
+        $printFile = PrintFile::orderByDesc('last_printed_at')->first();
+        $printedFromExisting = false;
 
-            $item->decrement('current_stock', 1);
+        if ($printFile) {
+            $baseName = pathinfo($printFile->filename, PATHINFO_FILENAME);
+            $existingTxtPath = storage_path('prints/'.$baseName.'.txt');
 
-            StockMovement::create([
-                'item_id' => $item->id,
-                'type' => 'out',
-                'quantity' => 1,
-                'reference_type' => 'sale',
-                'reference_id' => $sale->id,
-                'notes' => 'Simulated sale '.$sale->invoice_number,
-                'user_id' => Auth::id() ?? 1,
-            ]);
+            if (file_exists($existingTxtPath)) {
+                try {
+                    if (! PrintReceipt::sendToPrinter($existingTxtPath, $printer, $validated['copies'])) {
+                        return redirect()->route('store-settings.edit')
+                            ->with('error', 'Simulasi gagal: tidak dapat mencetak file struk yang ada.');
+                    }
 
-            return $sale;
-        });
-
-        try {
-            if (method_exists(PrintReceipt::class, 'dispatchSync')) {
-                PrintReceipt::dispatchSync($sale, true);
-            } else {
-                PrintReceipt::dispatch($sale, true)->onConnection('sync');
+                    $printedFromExisting = true;
+                } catch (\Throwable $e) {
+                    return redirect()->route('store-settings.edit')
+                        ->with('error', 'Simulasi gagal saat mencetak file struk yang ada: '.$e->getMessage());
+                }
             }
-        } catch (\Throwable $e) {
-            // Fallback langsung jika dispatch tidak berjalan seperti yang diharapkan.
+        }
+
+        if (! $printedFromExisting) {
+            $previewSale = new \stdClass();
+            $previewSale->id = null;
+            $previewSale->invoice_number = 'SIM-'.now()->format('YmdHis');
+            $previewSale->created_at = now();
+            $previewSale->payment_method = 'cash';
+            $previewSale->subtotal = 15000;
+            $previewSale->discount = 0;
+            $previewSale->total = 15000;
+            $previewSale->paid_amount = 20000;
+            $previewSale->change_amount = 5000;
+            $previewSale->notes = 'Simulasi print struk';
+            $previewSale->user = (object) ['name' => Auth::user()?->name ?? 'Kasir'];
+            $previewSale->items = collect([
+                (object) [
+                    'item_name' => 'Contoh Produk',
+                    'item_sku' => 'BRG-0001',
+                    'quantity' => 1,
+                    'price' => 15000,
+                    'subtotal' => 15000,
+                ],
+            ]);
+
             try {
-                (new PrintReceipt($sale, true))->handle();
-            } catch (\Throwable $e2) {
+                (new PrintReceipt($previewSale, true, true))->handle();
+            } catch (\Throwable $e) {
                 return redirect()->route('store-settings.edit')
-                    ->with('error', 'Simulasi gagal saat mencetak: '.$e->getMessage().' | fallback: '.$e2->getMessage());
+                    ->with('error', 'Simulasi gagal saat mencetak: '.$e->getMessage());
             }
         }
 
-        $printFile = PrintFile::where('sale_id', $sale->id)->first();
-        if (! $printFile) {
-            (new PrintReceipt($sale, true))->handle();
-            $printFile = PrintFile::where('sale_id', $sale->id)->first();
-        }
-
-        if (! $printFile) {
-            return redirect()->route('store-settings.edit')
-                ->with('error', 'Simulasi selesai tetapi PrintFile tidak ditemukan.');
-        }
-
-        return redirect()->route('print-files.index', ['sale_id' => $sale->id])
-            ->with('success', 'Simulasi berhasil. Sale ID='.$sale->id.'. File struk tersedia di daftar Cetak Struk.');
+        return redirect()->route('store-settings.edit')
+            ->with('success', 'Simulasi print berhasil dijalankan tanpa mengubah stok atau membuat transaksi nyata.');
     }
 
     public function testCashDrawer(Request $request)
@@ -453,5 +395,41 @@ class StoreSettingController extends Controller
         }
 
         return redirect()->route('store-settings.edit')->with('error', 'Percobaan membuka cash drawer gagal — cek alamat dan koneksi perangkat.');
+    }
+
+    /**
+     * Extract and process field value based on configuration
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  array  $validated
+     * @param  \App\Models\StoreSetting  $storeSetting
+     * @param  string  $field
+     * @param  array  $config
+     * @return mixed
+     */
+    protected function getFieldValue($request, $validated, $storeSetting, $field, $config)
+    {
+        $type = $config['type'] ?? 'string';
+
+        // Handle boolean fields
+        if ($type === 'boolean') {
+            return $request->boolean($field);
+        }
+
+        // Get value from validated data
+        $value = $validated[$field] ?? null;
+        
+        // If value is null and fallback is specified, use stored value or default
+        if ($value === null && isset($config['fallback'])) {
+            if ($config['fallback'] !== null) {
+                // Fallback to stored value
+                $value = $storeSetting->{$config['fallback']} ?? ($config['default'] ?? null);
+            } else {
+                // Use default directly (no stored fallback)
+                $value = $config['default'] ?? null;
+            }
+        }
+
+        return $value;
     }
 }

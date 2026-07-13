@@ -133,22 +133,28 @@ class SaleController extends Controller
         }
 
         $printReceiptRequested = $request->boolean('print_receipt');
-        $printMessage = 'Transaksi berhasil disimpan dan struk telah diproses.';
+        $printMessage = 'Transaksi berhasil disimpan.';
         $printError = null;
 
         try {
             $store = StoreSetting::current();
-            $shouldPrintToDevice = $store->auto_print_receipt || $printReceiptRequested;
+            $shouldPrintToDevice = $store->auto_print_receipt;
 
             if (method_exists(PrintReceipt::class, 'dispatchSync')) {
                 PrintReceipt::dispatchSync($sale, false, $shouldPrintToDevice);
             } else {
                 PrintReceipt::dispatch($sale, false, $shouldPrintToDevice)->onConnection('sync');
             }
+
+            if ($printReceiptRequested) {
+                $printMessage = 'Transaksi berhasil disimpan. Silakan lanjut ke preview struk.';
+            } else {
+                $printMessage = 'Transaksi berhasil disimpan. Struk tersimpan di menu Cetak Struk.';
+            }
         } catch (\Throwable $e) {
             $printError = $e->getMessage();
-            $printMessage = 'Transaksi berhasil disimpan, tetapi cetak struk gagal: '.$printError;
-            Log::error('Auto print dispatch failed: '.$e->getMessage());
+            $printMessage = 'Transaksi berhasil disimpan, tetapi proses struk gagal: '.$printError;
+            Log::error('Print receipt processing failed: '.$e->getMessage());
         }
 
         // Auto-open cash drawer if the user has the device and enabled auto-open.

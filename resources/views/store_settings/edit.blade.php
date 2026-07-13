@@ -144,9 +144,6 @@
                             <input type="hidden" name="name" value="{{ old('name', $storeSetting->name) }}">
                             <input type="hidden" name="address" value="{{ old('address', $storeSetting->address) }}">
 
-                            <input type="hidden" name="name" value="{{ old('name', $storeSetting->name) }}">
-                            <input type="hidden" name="address" value="{{ old('address', $storeSetting->address) }}">
-
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
                         </form>
                     </div>
